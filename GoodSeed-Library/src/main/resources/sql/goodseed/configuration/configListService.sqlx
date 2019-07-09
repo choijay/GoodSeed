@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="configList">
+    <insert id="insertConfigList">
+     INSERT /* [configListService.sqlx][configList.insertConfigList][20161111][jay] */
+       INTO "SYS_CONFIG"
+           ("VARIABLE"
+           ,"VALUE"
+           ,"REMARK"
+           ,"USE_YN"
+           ,"REG_ID"
+           ,"REG_DTM"
+           ,"UPD_ID"
+           ,"UPD_DTM"
+	       )
+	VALUES( #{VARIABLE}
+		   ,#{VALUE}
+		   ,#{REMARK}
+		   ,#{USE_YN}
+		   ,#{UPD_ID}
+		   ,NOW()
+		   ,#{UPD_ID}
+		   ,NOW()	
+		)	
+    </insert> 
+    <select id="getConfigList" resultType="HMap">
+		SELECT /* [configListService.sqlx][configList.getConfigList][20161111][jay] */
+			A."VARIABLE"
+			, A."VALUE"
+			, A."REMARK"
+			, A."USE_YN"
+			, A."REG_ID"
+			, TO_CHAR(A."REG_DTM", 'YYYY-MM-DD hh24:mi:ss') as "REG_DTM"
+			, A."UPD_ID"
+			, TO_CHAR(A."UPD_DTM", 'YYYY-MM-DD hh24:mi:ss') as "UPD_DTM"
+	   	  FROM "SYS_CONFIG" A
+	   	  <trim prefix="WHERE" prefixOverrides="AND |OR">
+			<if test='VARIABLE !=null and VARIABLE !=""'>
+			   AND A."VARIABLE" LIKE '%' ||#{VARIABLE} || '%'
+			</if>
+   			<if test='REMARK !=null and REMARK !=""'>
+			   AND A."REMARK" LIKE '%' || #{REMARK} || '%'
+			</if>
+			<if test='USE_YN !=null and USE_YN !=""'>
+			   AND A."USE_YN" = #{USE_YN}
+			</if>
+		</trim>
+    </select>
+     <select id="getAllConfigList" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT  /* [configListService.sqlx][configList.getAllConfigList][20161111][jay] */
+				"VARIABLE"
+	           ,"VALUE"
+	           ,"REMARK"
+	           ,"USE_YN"
+	           ,"REG_ID"
+	           ,TO_CHAR("REG_DTM", 'YYYY-MM-DD hh24:mi:ss') as "REG_DTM"
+               ,"UPD_ID"
+               ,TO_CHAR("UPD_DTM", 'YYYY-MM-DD hh24:mi:ss') as "UPD_DTM"
+	   	  FROM	"SYS_CONFIG"
+	   	  WHERE "USE_YN" = #{USE_YN}
+    </select>
+     <select id="getValue" resultType="string">
+		SELECT  /* [configListService.sqlx][configList.getConfigList][20161111][jay] */
+	            "VALUE"
+	   	  FROM	"SYS_CONFIG"
+	   	 WHERE  "VARIABLE" = #{VARIABLE}
+    </select>
+     <select id="getMaxUdt" resultType="string">
+     	SELECT  /* [configListService.sqlx][configList.getMaxUdt][20161111][jay] */
+     	        MAX(TO_CHAR("UPD_DTM", 'YYYYMMDDhh24miss')) as "UPD_DTM"
+     	  FROM	"SYS_CONFIG"
+     </select>    
+    <update id="updateConfigList">
+		UPDATE  /* [configListService.sqlx][configList.updateConfigList][20161111][jay] */
+				"SYS_CONFIG"
+		SET		  "VALUE" 	= #{VALUE}
+		  		, "REMARK"	= #{REMARK}
+		  		, "USE_YN"    = #{USE_YN}
+		  		, "UPD_ID"	= #{UPD_ID}
+		  		, "UPD_DTM"	= NOW()	
+         WHERE  "VARIABLE"   = #{VARIABLE}
+    </update>
+    <delete id="deleteConfigList">
+		DELETE 	/* [configListService.sqlx][configList.deleteConfigList][20161111][jay] */
+    	FROM  "SYS_CONFIG"
+    	WHERE  "VALUE"    = #{VALUE}
+    </delete> 
+</mapper>

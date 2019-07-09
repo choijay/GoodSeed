@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="authority">
+	<insert id="insertUserLogByLogin">
+		<selectKey keyProperty="loginDt" resultType="String" order="BEFORE">
+        	SELECT TO_CHAR((('now'::text)::TIMESTAMP(6) with time zone),'YYYYMMDDHH24MISS');
+       </selectKey>
+        INSERT	/* [authorityService.sqlx][authority.insertUserLogByLogin][김병욱] */
+		INTO	"SYS_USERLOGIN_LOG"
+        (
+            "USER_ID",
+            "LOGIN_DTM",
+            "LOGIN_IP_NO",
+            "LOGIN_SUCC_YN",
+            "REG_ID",
+            "REG_DTM"
+        )
+        VALUES
+        (
+            #{userId}
+            , TO_TIMESTAMP(#{loginDt}, 'YYYYMMDDHH24MISS')
+            , #{ipaddr}
+            , #{loginSuccYn}
+            , #{userId}
+            , NOW()
+        )
+    </insert>
+    <insert id="insertUserMenuClickLog">
+        INSERT	/* [authorityService.sqlx][authority.insertUserMenuClickLog][김병욱] */
+		INTO	"SYS_USER_LOG"
+        (
+            "USER_ID",
+            "PROG_CD",
+            "LOG_CL",
+            "PRO_STA_DTM",
+            "RMK",
+            "IP_NO",
+            "REG_ID",
+            "REG_DTM"
+        )
+        VALUES
+        (	#{g_userId},
+            #{progCd},
+            #{logCl},
+            NOW(),
+            #{rmk},
+            #{ipaddr},
+            #{g_userId},
+            NOW()
+        )
+    </insert>
+    <insert id="insertUserPwdChangeLog">
+        INSERT	/* [authorityService.sqlx][authority.insertUserPwdChangeLog][김병욱] */
+        INTO	"SYS_USER_LOG"
+        (
+            "USER_ID",
+            "LOG_CL",
+            "RMK",
+            "PWD_NO",
+            "IP_NO",
+            "PWD_CHG_DTM",
+            "REG_DTM",
+            "REG_ID"
+        )
+        VALUES
+        (	#{userId},
+            #{log_cl},
+            #{rmk},
+            #{pwd_no},
+            #{ipaddr},
+            NOW(),
+            NOW(),
+            #{g_userId}
+        )
+    </insert>
+    <select id="getUserData" resultType="HMap">
+        SELECT	/* [authorityService.sqlx][authority.getUserData][김병욱] */
+              	A."USER_ID" AS "USERID",
+               	A."USER_NM" AS "USERNM",
+               	A."USER_STS_CD" AS "USERSTSCD",
+               	A."REG_DTM" AS "REGDTM",
+               	A."UPD_DTM" AS "UPDDTM",
+               	A."MAIL_ID" AS "EMAILADDR",
+               	A."HANDPHONE_NO" AS "MOBNO",
+               	A."COTEL_NO" AS "TELNO"
+         FROM	"SYS_USER" A
+         WHERE  A."USER_ID" = #{userId}
+         AND  	A."USE_YN"  = '1'
+    </select>
+    <select id="getAuthData" resultType="HMap">
+        SELECT	/* [authorityService.sqlx][authority.getAuthData][김병욱] */
+                "USER_ID"     AS "USERID"
+              	,"PWD_NO"      AS "PWDNO"
+              	,"FAIL_IN_CNT" AS "FAILINCNT"
+              	,"PWD_CHG_DT"  AS "PWDCHGDT"
+              	,CAST((COALESCE(TO_DATE(TO_CHAR(NOW(), 'YYYYMMDD'), 'YYYYMMDD') - TO_DATE("PWD_CHG_DT", 'YYYYMMDD'), 0))AS TEXT) AS "PWDREVBYDIFF"
+              	,CAST((COALESCE(TO_DATE(TO_CHAR(NOW(), 'YYYYMMDD'), 'YYYYMMDD') - TO_DATE(TO_CHAR("FINAL_IN_DTM", 'YYYYMMDD'), 'YYYYMMDD'), 0)) AS TEXT) AS "LOGINDTDIFF"
+              	,"USER_STS_CD" AS "USERSTSCD"
+              	,'1' AS "ALLOW_ALL_IP_YN"
+		FROM	"SYS_USER"
+        WHERE  	"USER_ID"      = #{userId}
+		AND  	"USER_STS_CD" != '99'
+		AND  	"USE_YN"       = '1'
+    </select>
+    <select id="getLoginHst" resultType="HMap">
+        SELECT "USER_ID" AS "USERID" FROM (
+        SELECT  /* [authorityService.sqlx][authority.getLoginHst][김병욱] */
+                "USER_ID",
+                 ROW_NUMBER() OVER (ORDER BY "USER_ID" ASC) AS "ROWNUM"
+		FROM  	"SYS_USERLOGIN_LOG"
+        WHERE  	"USER_ID" 		= #{userId}
+        AND  	"LOGIN_SUCC_YN" 	= '1') A
+        WHERE  	A."ROWNUM" 			= 1
+    </select>
+    <select id="getLoginHstList" resultType="HMap">
+		SELECT	/* [authorityService.sqlx][authority.getLoginHst][김병욱] */
+				*
+		FROM (
+			SELECT	ROW_NUMBER() OVER (ORDER BY "LOGIN_DTM" DESC) "ROWNUM",
+					TO_CHAR("LOGIN_DTM", 'yyyy-MM-dd HH24:MI:SS.MS') AS "LOGINDT" ,
+					TO_CHAR("LOGOUT_DTM", 'yyyy-MM-dd HH24:MI:SS.MS') AS "LOTDT" ,
+					CASE
+					WHEN "LOGIN_SUCC_YN"='1' THEN 'success'
+					WHEN "LOGIN_SUCC_YN"='0' THEN 'failure'
+					END AS "LOGINSUCCYN",
+					"LOGIN_IP_NO" AS "LOGINIP"
+			FROM 	"SYS_USERLOGIN_LOG"
+			WHERE	"USER_ID" = #{g_userId}
+			ORDER BY "LOGINDT" DESC
+		) T
+		WHERE T."ROWNUM" &lt;= 50		/* 최근 50건까지 보여줌 */
+	</select>
+	<select id="getLoginHstBeforeList" resultType="HMap">
+		SELECT	/* [authorityService.sqlx][authority.getLoginHstBeforeList][김병욱] */
+				*
+		FROM (
+			SELECT	
+					ROW_NUMBER() OVER (ORDER BY "LOGIN_DTM" DESC) "ROWNUM",
+					TO_CHAR("LOGIN_DTM", 'YYYYMMDDHH24MISS')  AS "LOGINDT" ,
+					TO_CHAR("LOGOUT_DTM", 'YYYYMMDDHH24MISS') AS "LOTDT" ,
+					"LOGIN_IP_NO" AS "LOGINIP"
+			FROM 	"SYS_USERLOGIN_LOG"
+			WHERE 	"USER_ID" 		= #{userId}
+			AND 	"LOGIN_SUCC_YN" 	= '1'
+			ORDER BY "LOGINDT" DESC
+		)T WHERE  T."ROWNUM" &lt;= 2
+	</select>
+    <select id="getLogoutCheck" resultType="HMap">
+     	SELECT  /* [authorityService.sqlx][authority.getLogoutCheck][김병욱] */
+        		TO_CHAR("LOGOUT_DTM", 'YYYY-MM-DD HH24:MI:SS') AS "LOTDT"
+        FROM 	"SYS_USERLOGIN_LOG"
+        WHERE 	"USER_ID" 	= #{g_userId}
+        AND 	"LOGIN_DTM" 	= TO_DATE(#{g_loginDt}, 'YYYYMMDDHH24MISS')
+    </select>
+    <select id="getPwd" resultType="String">
+        SELECT /* [authorityService.sqlx][authority.getPwd][김병욱] */
+            	"PWD_NO" AS "PWD"
+        FROM 	"SYS_USER"
+        WHERE 	"USER_ID" = #{userId}
+        AND 	"USER_STS_CD" != '99'
+    </select>
+    <select id="getCheckPrevPwdLog" resultType="Integer">
+    	SELECT  /* [authorityService.sqlx][authority.getCheckPrevPwdLog][김병욱] */
+    			COUNT("USER_ID")
+    	FROM   (
+	    	         SELECT	"USER_ID", "PWD_NO"
+	           	     FROM  	"SYS_USER_LOG"
+	        	     WHERE  "REG_DTM" BETWEEN (NOW() - 30) AND NOW()
+	        	     AND	"USER_ID" = #{g_userId}
+	        	     AND  	"LOG_CL"  = '4'
+		    	) A
+         WHERE  "PWD_NO" = #{newPwd}
+    </select>
+    <select id="getCheckPwdUpdate24H" resultType="Integer">
+        SELECT  /* [authorityService.sqlx][authority.getCheckPwdUpdate24H][공정일] */
+        		COUNT("USER_ID")
+        FROM 	"SYS_USER_LOG"
+        WHERE 	"REG_DTM" BETWEEN (NOW() - 1) AND NOW()
+        AND		"USER_ID"	= #{g_userId}
+        AND 	"LOG_CL" 	= '4'
+    </select>
+    <select id="getAllowIpListForCheck" resultType="HMap">
+        SELECT  /* [authorityService.sqlx][authority.getAllowIpListForCheck][김병욱] */
+            	"ALLOW_IP"
+        FROM 	"SYS_ALLOW_IP"
+        WHERE 	"USER_ID" = #{g_userId}
+    </select>
+	<select id="getUserLoginInfoForMultiLoginCheck" resultType="HMap">
+		SELECT  /* [authorityService.sqlx][authority.getUserLoginInfoForMultiLoginCheck][김철영][2013.11.06] */
+				"LOGIN_CHK"
+		FROM  "SYS_USER"
+		WHERE "USER_ID" = #{userId}
+	</select>
+    <update id="updateIntgUser">
+      	UPDATE  /* [authorityService.sqlx][authority.updateIntgUser][김병욱] */
+              "SYS_USER"
+        SET  	"UPD_DTM" = NOW()
+            	, "UPD_ID"      = #{g_userId}
+            	, "LOGIN_IP_NO" = #{ipaddr}
+            	, "LOGIN_CHK" = #{loginChk}
+            	<if test="pwdFail == &quot;true&quot;">
+            	, "FAIL_IN_CNT"  = "FAIL_IN_CNT" + 1
+            	, "FAIL_TOT_CNT" = "FAIL_TOT_CNT" + 1
+            	, "FAIL_IN_DTM"  = NOW()
+            	</if>
+	        	<if test="pwdFail3Times == &quot;true&quot;">
+	            , "USER_STS_CD"  = '02'
+	        	</if>
+	        	<if test="userStsCd == &quot;02&quot;">
+	            , "USER_STS_CD"  = '02'
+	        	</if>
+	        	<if test="loginSuccess == &quot;true&quot;">
+	            , "FAIL_IN_CNT"  = 0
+	            , "FINAL_IN_DTM" = NOW()
+	        	</if>
+            	<if test="logOutSuccess == &quot;true&quot;">
+	            , "FINAL_OUT_DTM" = NOW()
+	         	</if>
+       	WHERE	"USER_ID" = #{userId}
+    </update>
+    <update id="updateUserLogoutLog">
+		UPDATE	/* [authorityService.sqlx][authority.updateUserLogoutLog][김병욱] */
+    			"SYS_USERLOGIN_LOG"
+		SET		"LOGOUT_DTM"	= NOW(),
+				"UPD_DTM"	= NOW(),
+				"UPD_ID" 	= #{g_userId}
+    	WHERE	"USER_ID" 	= #{userId}
+    	AND 	"LOGIN_DTM" 	= TO_TIMESTAMP(#{loginDt}, 'YYYYMMDDHH24MISS')
+    </update>
+    <update id="updatePwd">
+        UPDATE	/* [authorityService.sqlx][authority.updatePwd][김병욱] */
+            	"SYS_USER"
+        SET	"UPD_DTM" = NOW(),
+            "UPD_ID" = #{g_userId},
+            "PWD_CHG_DT" = TO_CHAR(NOW(),'YYYYMMDD'),
+            "FAIL_IN_CNT" = 0
+            <if test="newPwd != null">
+            , "PWD_NO" = #{newPwd}
+            </if>
+            <if test="userStsCd != null">
+            , "USER_STS_CD" = #{userStsCd}
+            </if>
+        WHERE "USER_ID" = #{userId}
+    </update>
+</mapper>

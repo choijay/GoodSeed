@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="contract">
+	<!-- 계약관리 조회 -->
+	<select id="getContractList" resultType="HMap">
+		SELECT	/* [contractService.sqlx][contract.getContractList][계약관리 조회][최진영][2016.12.20] */	
+			A."CUST_NO",
+			B."CONT_NO",
+			B."CONT_NM",
+			A."TEL",
+			A."HP",
+			B."CONT_DT",
+			B."CONT_STATUS_CD",
+			B."PAY_STATUS_CD",
+			B."CMS_APPROVE_STATUS_CD",
+			T."TOT_PAY_AMT",
+			B."MONTH_PAY_AMT",
+			T."TOT_PAY_COUNT", 
+			B."TERMS_CD",
+			B."SHOP_CD",
+			B."PAYER_NO",
+			A."ADDR1" || A."ADDR2" as "ADDR"
+	   	  FROM	"CUSTOMER" A JOIN "CONTRACT" B ON A."CUST_NO" = B."CUST_NO"
+		   	  LEFT OUTER JOIN (
+					SELECT D."CONT_NO", SUM(D."RESULT_PAID_AMT") "TOT_PAY_AMT", COUNT(D."RESULT_PAID_AMT") "TOT_PAY_COUNT"
+					FROM "CMS_FILE" C JOIN "CMS_FILE_DATA" D
+					ON C."CMS_FILE_NO" = D."CMS_FILE_NO"
+					AND C."PROCESS_DT" = D."PROCESS_DT"
+					AND C."FILE_TYPE" = 'EB21'
+					AND D."RESULT_UNPAID_AMT" = 0
+					GROUP BY D."CONT_NO"
+				) T
+				ON T."CONT_NO" = B."CONT_NO"
+		 WHERE 	A."CUST_NO" = #{CUST_NO}
+		 ORDER BY
+			<if test="sidx == null">
+				A."CUST_NO" ASC
+			</if>
+			<if test='sidx != null and sidx !=""'>					    
+				<if test="sidx == &quot;CONT_NO&quot;">B."CONT_NO"</if>
+				<if test="sidx == &quot;CONT_NM&quot;">B."CONT_NM"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+				<if test="sord == &quot;desc&quot;">DESC</if>
+		  	</if>
+    </select>
+    
+   	<!-- 고객 등록 -->
+   	<insert id="insertContract">
+   		<!-- 
+   		<selectKey keyProperty="CONT_NO" resultType="String" order="BEFORE">
+        	SELECT TO_CHAR(NOW(), 'YYYY-3MM') || '-' || LPAD(NEXTVAL('"SQ_CONT_NO"')::text, 5, '0')
+        </selectKey>
+         -->
+   		INSERT /* [contractService.sqlx][contract.insertContract][고객 등록][최진영][2016.12.20] */
+   		INTO "CONTRACT"(
+            "CONT_NO"
+			, "CONT_NM"
+			, "CUST_NO"
+			, "CONT_DT"
+			, "TERMS_CD"
+			, "CONT_DOC_NO"
+			, "SHOP_CD"
+			, "CONT_DOC_SEND_YN"
+			, "CONT_DOC_RECEIVE_YN"
+			, "CONT_DOC_RECEIVE_DT"
+			, "DELAY_REQ_START_DT"
+			, "DELAY_REQ_END_DT"
+			, "SHROUD_STATUS_CD"
+			, "SHROUD_RECEIPT_DT"
+			, "UNSINGED_TRANSFER_STATUS_CD"
+			, "UNSINGED_TRANSFER_USE_DT"
+			, "CONT_STATUS_CD"
+			, "PAY_STATUS_CD"
+			, "CMS_APPROVE_STATUS_CD"
+			, "TERMINATION_POSSIBLE_YN"
+			, "TERMINATION_DT"
+			, "TERMINATION_REASON"
+			, "PRODUCT_AMT"
+			, "SALE_AMT"
+			, "PAID_AMT"
+			, "MATURITY_AMT"
+			, "TOT_PAY_COUNT"
+			, "MONTH_PAY_AMT"
+			, "SALE_MEMO"
+			, "TERMINATION_REFUND_AMT"
+			, "CONT_FILE_SEQ"
+			, "ORIGIN_CONT_ID"
+			, "PAYER_NO"
+			, "BANK_CD"
+			, "ACCOUNT_NO"
+			, "ACCOUNT_NM"
+			, "ACCOUNT_BIRTH"
+			, "PAY_START_DT"
+			, "REGULAR_PAY_DAY"
+			, "NEXT_TEMP_PAY_AMT"
+			, "CMS_FILE_SEQ"
+			, "OVERDUE_COUNT"
+			, "REG_ID"
+			, "REG_DTM"
+            )
+	    VALUES (
+			#{CONT_NO}
+			, #{CONT_NM}
+			, #{CUST_NO}
+			, #{CONT_DT}
+			, #{TERMS_CD}
+			, #{CONT_DOC_NO}
+			, #{SHOP_CD}
+			, #{CONT_DOC_SEND_YN}
+			, #{CONT_DOC_RECEIVE_YN}
+			, #{CONT_DOC_RECEIVE_DT}
+			, #{DELAY_REQ_START_DT}
+			, #{DELAY_REQ_END_DT}
+			, #{SHROUD_STATUS_CD}
+			, #{SHROUD_RECEIPT_DT}
+			, #{UNSINGED_TRANSFER_STATUS_CD}
+			, #{UNSINGED_TRANSFER_USE_DT}
+			, #{CONT_STATUS_CD}
+			, #{PAY_STATUS_CD}
+			, #{CMS_APPROVE_STATUS_CD}
+			, #{TERMINATION_POSSIBLE_YN}
+			, #{TERMINATION_DT}
+			, #{TERMINATION_REASON}
+			, CAST(COALESCE(NULLIF(#{PRODUCT_AMT},''), '0') AS INTEGER)
+			, CAST(COALESCE(NULLIF(#{SALE_AMT},''), '0') AS INTEGER)
+			, CAST(COALESCE(NULLIF(#{PAID_AMT},''), '0') AS INTEGER)
+			, CAST(COALESCE(NULLIF(#{MATURITY_AMT},''), '0') AS INTEGER)
+			, CAST(COALESCE(NULLIF(#{TOT_PAY_COUNT},''), '0') AS NUMERIC)
+			, CAST(COALESCE(NULLIF(#{MONTH_PAY_AMT},''), '0') AS INTEGER)
+			, #{SALE_MEMO}
+			, CAST(COALESCE(NULLIF(#{TERMINATION_REFUND_AMT},''), '0') AS INTEGER)
+			, #{CONT_FILE_SEQ}
+			, #{ORIGIN_CONT_ID}
+			, (SELECT '1' || LPAD(NEXTVAL('"SQ_PAYER_NO"')::text, 12, '0'))
+			, #{BANK_CD}
+			, #{ACCOUNT_NO}
+			, #{ACCOUNT_NM}
+			, #{ACCOUNT_BIRTH}
+			, #{PAY_START_DT}
+			, CAST(#{REGULAR_PAY_DAY} AS NUMERIC)
+			, 0
+			, #{CMS_FILE_SEQ}
+			, 0 /*OVERDUE_COUNT*/
+			, #{g_userId}
+			, NOW()
+	    	)
+    </insert>
+	
+	<update id="updateContract">
+		UPDATE "CONTRACT"
+		SET   "CONT_NM"                     = #{CONT_NM}
+			, "CUST_NO"                     = #{CUST_NO}
+			, "CONT_DT"                     = #{CONT_DT}
+			, "TERMS_CD"                    = #{TERMS_CD}
+			, "CONT_DOC_NO"                 = #{CONT_DOC_NO}
+			, "SHOP_CD"                     = #{SHOP_CD}
+			, "CONT_DOC_SEND_YN"            = #{CONT_DOC_SEND_YN}
+			, "CONT_DOC_RECEIVE_YN"         = #{CONT_DOC_RECEIVE_YN}
+			, "CONT_DOC_RECEIVE_DT"         = #{CONT_DOC_RECEIVE_DT}
+			, "DELAY_REQ_START_DT"          = #{DELAY_REQ_START_DT}
+			, "DELAY_REQ_END_DT"            = #{DELAY_REQ_END_DT}
+			, "SHROUD_STATUS_CD"            = #{SHROUD_STATUS_CD}
+			, "SHROUD_RECEIPT_DT"           = #{SHROUD_RECEIPT_DT}
+			, "UNSINGED_TRANSFER_STATUS_CD" = #{UNSINGED_TRANSFER_STATUS_CD}
+			, "UNSINGED_TRANSFER_USE_DT"    = #{UNSINGED_TRANSFER_USE_DT}
+			<if test='CONT_STATUS_CD != null and CONT_STATUS_CD !=""'>
+			, "CONT_STATUS_CD"              = #{CONT_STATUS_CD}
+			</if>
+			<if test='PAY_STATUS_CD != null and PAY_STATUS_CD !=""'>
+			, "PAY_STATUS_CD"               = #{PAY_STATUS_CD}
+			</if>
+			<if test='CMS_APPROVE_STATUS_CD != null and CMS_APPROVE_STATUS_CD !=""'>
+			, "CMS_APPROVE_STATUS_CD"   	= #{CMS_APPROVE_STATUS_CD}
+			</if>
+			, "TERMINATION_POSSIBLE_YN"     = #{TERMINATION_POSSIBLE_YN}
+			, "TERMINATION_DT"              = #{TERMINATION_DT}
+			, "TERMINATION_REASON"          = #{TERMINATION_REASON}
+			, "PRODUCT_AMT"                 = CAST(COALESCE(NULLIF(#{PRODUCT_AMT},''), '0') AS INTEGER)
+			, "SALE_AMT"                    = CAST(COALESCE(NULLIF(#{SALE_AMT},''), '0') AS INTEGER)
+			, "PAID_AMT"                    = CAST(COALESCE(NULLIF(#{PAID_AMT},''), '0') AS INTEGER)
+			, "MATURITY_AMT"                = CAST(COALESCE(NULLIF(#{MATURITY_AMT},''), '0') AS INTEGER)
+			, "TOT_PAY_COUNT"               = CAST(COALESCE(NULLIF(#{TOT_PAY_COUNT},''), '0') AS NUMERIC)
+			, "MONTH_PAY_AMT"               = CAST(COALESCE(NULLIF(#{MONTH_PAY_AMT},''), '0') AS INTEGER)
+			, "SALE_MEMO"                   = #{SALE_MEMO}
+			, "TERMINATION_REFUND_AMT"      = CAST(COALESCE(NULLIF(#{TERMINATION_REFUND_AMT},''), '0') AS INTEGER)
+			, "CONT_FILE_SEQ"               = #{CONT_FILE_SEQ}
+			, "ORIGIN_CONT_ID"              = #{ORIGIN_CONT_ID}
+			, "BANK_CD"                     = #{BANK_CD}
+			, "ACCOUNT_NO"                  = #{ACCOUNT_NO}
+			, "ACCOUNT_NM"                  = #{ACCOUNT_NM}
+			, "ACCOUNT_BIRTH"             	= #{ACCOUNT_BIRTH}
+			, "PAYER_NO"             		= #{PAYER_NO}
+			, "PAY_START_DT"                = #{PAY_START_DT}
+			, "REGULAR_PAY_DAY"             = CAST(#{REGULAR_PAY_DAY} AS NUMERIC)
+			, "NEXT_TEMP_PAY_AMT"           = CAST(COALESCE(NULLIF(#{NEXT_TEMP_PAY_AMT},''), '0') AS INTEGER)
+			, "CMS_FILE_SEQ"                = #{CMS_FILE_SEQ}
+			, "OVERDUE_COUNT"               = CAST(COALESCE(NULLIF(#{OVERDUE_COUNT},''), '0') AS INTEGER)
+			, "UPD_ID" 						= #{g_userId}
+            , "UPD_DTM" 					= NOW()
+		WHERE "CONT_NO" = #{CONT_NO}
+	</update>
+	
+	<update id="updateContractStatus">
+		UPDATE "CONTRACT"
+		SET   
+			<if test='CONT_STATUS_CD != null and CONT_STATUS_CD !=""'>
+			"CONT_STATUS_CD"          = #{CONT_STATUS_CD}, 
+			</if>
+			<if test='PAY_STATUS_CD != null and PAY_STATUS_CD !=""'>
+			"PAY_STATUS_CD"          = #{PAY_STATUS_CD}, 
+			</if>
+			<if test='CMS_APPROVE_STATUS_CD != null and CMS_APPROVE_STATUS_CD !=""'>
+			"CMS_APPROVE_STATUS_CD"   = #{CMS_APPROVE_STATUS_CD},
+			</if>
+			<if test='BANK_CD != null and BANK_CD !=""'>
+			"BANK_CD"   = #{BANK_CD},
+			</if>
+			<if test='ACCOUNT_NO != null and ACCOUNT_NO !=""'>
+			"ACCOUNT_NO"   = #{ACCOUNT_NO},
+			</if>
+			<if test='ACCOUNT_BIRTH != null and ACCOUNT_BIRTH !=""'>
+			"ACCOUNT_BIRTH"   = #{ACCOUNT_BIRTH},
+			</if>
+			"UPD_ID" 				= #{g_userId},
+            "UPD_DTM" 				= NOW()
+		WHERE "PAYER_NO" = #{PAYER_NO}
+	</update>
+	
+	<select id="getContract" resultType="HMap">
+		SELECT "CONT_NO"
+			, "CONT_NM"
+			, "CUST_NO"
+			, "CONT_DT"
+			, "TERMS_CD"
+			, "CONT_DOC_NO"
+			, "SHOP_CD"
+			, "CONT_DOC_SEND_YN"
+			, "CONT_DOC_RECEIVE_YN"
+			, "CONT_DOC_RECEIVE_DT"
+			, "DELAY_REQ_START_DT"
+			, "DELAY_REQ_END_DT"
+			, "SHROUD_STATUS_CD"
+			, "SHROUD_RECEIPT_DT"
+			, "UNSINGED_TRANSFER_STATUS_CD"
+			, "UNSINGED_TRANSFER_USE_DT"
+			, "CONT_STATUS_CD"
+			, "PAY_STATUS_CD"
+			, "CMS_APPROVE_STATUS_CD"
+			, (SELECT D."COMM_CD_NM" FROM "SYS_CODE" D WHERE D."COMM_CL_CD" = 'GS032' AND D."COMM_CD" = A."CMS_ERROR_CD") AS "CMS_ERROR_NM"
+			, "TERMINATION_POSSIBLE_YN"
+			, "TERMINATION_DT"
+			, "TERMINATION_REASON"
+			, "PRODUCT_AMT"
+			, "SALE_AMT"
+			, "PAID_AMT"
+			, "MATURITY_AMT"
+			, "TOT_PAY_COUNT"
+			, "MONTH_PAY_AMT"
+			, "SALE_MEMO"
+			, "TERMINATION_REFUND_AMT"
+			, "CONT_FILE_SEQ"
+			, "PAYER_NO"
+			, B."UPLOADED_DIR_PATH" AS "CONT_FILE_DIR"
+			, B."UPLOADED_FILE_NM" AS "CONT_FILE_NM"
+			, "ORIGIN_CONT_ID"
+			, "BANK_CD"
+			, "ACCOUNT_NO"
+			, "ACCOUNT_NM"
+			, "ACCOUNT_BIRTH"
+			, "PAY_START_DT"
+			, "REGULAR_PAY_DAY"
+			, "NEXT_TEMP_PAY_AMT"
+			, "CMS_FILE_SEQ"
+			, C."UPLOADED_DIR_PATH" AS "CMS_FILE_DIR"
+			, C."UPLOADED_FILE_NM" AS "UPLOADED_FILE_NM"
+			, C."SOURCE_FILE_NM" AS "CMS_FILE_NM"
+			, "OVERDUE_COUNT"
+			, CASE WHEN (SELECT COUNT(*) 
+							FROM "CMS_FILE_DATA" T, "CMS_FILE" S 
+							WHERE T."PAYER_NO" = A."PAYER_NO" 
+							AND T."CMS_FILE_NO" = S."CMS_FILE_NO" 
+							AND T."PROCESS_DT" = S."PROCESS_DT" 
+							AND S."FILE_TYPE" ='EB13'
+							AND S."APPLY_YN" = 'Y') = 0 THEN 'N' ELSE 'Y' END AS "TELEGRAM_ING"
+		  FROM "CONTRACT" A 
+		  	LEFT OUTER JOIN "ATTACH_FILES" B ON A."CONT_FILE_SEQ" = B."FILE_SEQ"
+		  	LEFT OUTER JOIN "ATTACH_FILES" C ON A."CMS_FILE_SEQ" = C."FILE_SEQ"
+		 WHERE "CONT_NO" = #{CONT_NO}
+	</select>
+	
+	<insert id="insertAttachFile">
+   		<selectKey keyProperty="FILE_SEQ" resultType="String" order="BEFORE">
+        	SELECT TO_CHAR(NOW(), 'YYYYMM') || LPAD(NEXTVAL('"SQ_FILE_NO"')::text, 4, '0')
+        </selectKey>
+   		INSERT /* [contractService.sqlx][contract.insertAttachFile][첨부파일 등록][최진영][2017.03.08] */
+   		INTO "ATTACH_FILES"(
+			"FILE_SEQ", 
+			"UPLOADED_DIR_PATH", 
+			"UPLOADED_FILE_NM", 
+			"SOURCE_FILE_NM", 
+            "FILE_SIZE", 
+            "TYPE", 
+            "REF_ID", 
+            "REG_ID", 
+            "REG_DTM"
+		)
+		VALUES (
+			#{FILE_SEQ}, 
+			#{UPLOADED_DIR_PATH}, 
+			#{UPLOADED_FILE_NM}, 
+			#{SOURCE_FILE_NM}, 
+            CAST(#{FILE_SIZE} AS INTEGER), 
+            #{TYPE}, 
+            #{REF_ID}, 
+            #{g_userId}, 
+            NOW()
+		)
+	</insert>
+	
+	<select id="getAttachFile" resultType="HMap">
+		SELECT /* [contractService.sqlx][contract.getAttachFile][첨부파일 등록][최진영][2017.03.08] */
+			"FILE_SEQ", 
+			"UPLOADED_DIR_PATH", 
+			"UPLOADED_FILE_NM", 
+			"SOURCE_FILE_NM", 
+            "FILE_SIZE", 
+            "TYPE", 
+            "REF_ID"
+		FROM "ATTACH_FILES"
+		WHERE "FILE_SEQ" = #{FILE_SEQ}
+	</select>
+	
+	<delete id="deleteContract">
+		DELETE FROM "CONTRACT"
+		WHERE "CUST_NO" = #{CUST_NO}
+	</delete>
+	
+	<select id="existContractNo" resultType="int">
+		SELECT COUNT(*) AS "CNT" 
+		FROM "CONTRACT"
+		WHERE "CONT_NO" = #{CONT_NO}
+	</select>
+	
+	<insert id="insertCMSPayer">
+		INSERT INTO "CMS_PAYER"
+		(
+            "CONT_NO", 
+            "PAYER_NO", 
+            "CMS_APPROVE_STATUS_CD", 
+            "BANK_CD", 
+            "ACCOUNT_NO", 
+            "ACCOUNT_NM", 
+            "CMS_FILE_SEQ", 
+            "ACCOUNT_BIRTH", 
+            "REG_ID", 
+            "REG_DTM"
+		)
+    	SELECT 
+            "CONT_NO", 
+            "PAYER_NO", 
+            #{CMS_APPROVE_STATUS_CD}, 
+            "BANK_CD", 
+            "ACCOUNT_NO", 
+            "ACCOUNT_NM", 
+            "CMS_FILE_SEQ", 
+            "ACCOUNT_BIRTH", 
+            #{g_userId}, 
+            NOW()
+		FROM
+			"CONTRACT"
+		WHERE
+			"CONT_NO" = #{CONT_NO}
+	</insert>
+	
+	<select id="getPayerNo" resultType="string">
+		SELECT '1' || LPAD(NEXTVAL('"SQ_PAYER_NO"')::text, 12, '0')
+	</select>
+</mapper>

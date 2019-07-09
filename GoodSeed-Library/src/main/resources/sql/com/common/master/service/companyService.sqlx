@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="company">
+	
+	<update id="updateCompany">
+		UPDATE "COMPANY"
+		SET "COMP_NM" = #{COMP_NM}
+			, "CEO_NM" = #{CEO_NM}
+			, "COMP_REG_NO" = #{COMP_REG_NO}
+			, "ESTABLISH_DT" = #{ESTABLISH_DT}
+			, "BIZ_COND" = #{BIZ_COND}
+			, "BIZ_ITEM" = #{BIZ_ITEM}
+			, "ZIP_CD" = #{ZIP_CD}
+			, "ADDR1" = #{ADDR1}
+			, "ADDR2" = #{ADDR2}
+			, "ADDR3" = #{ADDR3}
+			, "TEL" = #{TEL}
+			, "CMS_ORG_CD" = #{CMS_ORG_CD}
+			, "CMS_PAY_DIGIT" = #{CMS_PAY_DIGIT}
+			, "WITHDRAW_FEE" = CAST(#{WITHDRAW_FEE} AS INTEGER)
+			, "MONTHLY_LIMIT_AMT" = CAST(#{MONTHLY_LIMIT_AMT} AS INTEGER)
+			, "LIMIT_AMT_PER_ACCOUNT" = CAST(#{LIMIT_AMT_PER_ACCOUNT} AS INTEGER)
+			, "BANK_CD" = #{BANK_CD}
+			, "ACCOUNT_NO" = #{ACCOUNT_NO}
+			, "BANKBOOK_DISP_NAME" = #{BANKBOOK_DISP_NAME}
+		WHERE "COMP_ID" = #{COMP_ID}
+	</update>
+	
+	<select id="getCompany" resultType="HMap">
+		SELECT 
+			"COMP_ID"
+			, "COMP_NM"
+			, "CEO_NM"
+			, "COMP_REG_NO"
+			, "ESTABLISH_DT"
+			, "BIZ_COND"
+			, "BIZ_ITEM"
+			, "ZIP_CD"
+			, "ADDR1"
+			, "ADDR2"
+			, "ADDR3"
+			, "TEL"
+			, "CMS_ORG_CD"
+			, "CMS_PAY_DIGIT"
+			, "WITHDRAW_FEE"
+			, "MONTHLY_LIMIT_AMT"
+			, "LIMIT_AMT_PER_ACCOUNT"
+			, "BANK_CD"
+			, "ACCOUNT_NO"
+			, "BANKBOOK_DISP_NAME"
+		  FROM "COMPANY"
+		 WHERE "COMP_ID" = #{COMP_ID}
+	</select>
+</mapper>

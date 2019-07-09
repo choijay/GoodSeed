@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="htmlAuthority">
+	<!-- 해당 사용자가 해당 URL에 권한이 있다면 그 URL의 최상위 프로그램부터 해당 URL의 프로그램까지 리스트로 출력한다. -->
+	<select id="selectProgramHierachyList" resultType="HMap">
+		WITH RECURSIVE CTE_TABLE("PROG_CD", "PROG_NM", "PROG_LVL", "PROG_NO_A", "PROG_NO_B", "SUBS")
+		AS
+		(
+			   SELECT	
+						A."PROG_CD", 
+	      				A."PROG_NM",
+	      				A."PROG_LVL",
+	      				A."PROG_NO_A",
+	      				A."PROG_NO_B",
+	      				A."SUBS"
+				   FROM
+					   (SELECT DISTINCT(A."PROG_NO") AS "PROG_NO_A",
+							  B."PROG_NO" AS "PROG_NO_B",   
+							  SUBSTRING(A."PROG_NO", 1, CAST((B."PROG_LVL"-1)*2 AS integer)) AS "SUBS",
+							  B."PROG_LVL",
+							  B."PROG_CD",
+							  B."PROG_NM"
+		         		FROM	"SYS_AUTH_USER" IA JOIN
+								"SYS_AUTHORITY" IB ON IA."AUTH_CD" =IB."AUTH_CD" JOIN
+								"SYS_AUTH_PROG" IC ON IA."AUTH_CD" =IC."AUTH_CD" JOIN
+								"SYS_PROGRAM" A ON IC."PROG_CD" = A."PROG_CD" JOIN
+								"SYS_PROGRAM" B ON A."SYSTEM_CL" = B."SYSTEM_CL"
+						WHERE 1=1
+							  AND IA."USER_ID" = #{g_userId}            
+							  AND IB."USE_YN" = '1'
+							  AND IB."AUTH_CL" = '1'
+							  AND IC."USE_YN" = '1'
+							  AND A."PROG_URL" = #{progURI} 
+							  AND A."USE_YN" = '1'
+							  AND B."USE_YN" = '1') A
+				        
+			   WHERE A."PROG_NO_B" = A."PROG_NO_A"
+		       
+			   UNION ALL      
+		        
+			   SELECT	
+						B."PROG_CD", 
+	      				B."PROG_NM",
+	      				B."PROG_LVL",
+	      				B."PROG_NO_A",
+	      				B."PROG_NO_B",
+	      				B."SUBS"
+				   FROM
+					   (SELECT DISTINCT(A."PROG_NO") AS "PROG_NO_A",
+							  B."PROG_NO" AS "PROG_NO_B",
+							  SUBSTRING(A."PROG_NO", 1, CAST((B."PROG_LVL"-1)*2 AS integer)) AS "SUBS",
+							  B."PROG_LVL",
+							  B."PROG_CD",
+							  B."PROG_NM"
+		         		FROM	"SYS_AUTH_USER" IA JOIN
+								"SYS_AUTHORITY" IB ON IA."AUTH_CD" =IB."AUTH_CD" JOIN
+								"SYS_AUTH_PROG" IC ON IA."AUTH_CD" =IC."AUTH_CD" JOIN
+								"SYS_PROGRAM" A ON IC."PROG_CD" = A."PROG_CD" JOIN
+								"SYS_PROGRAM" B ON A."SYSTEM_CL" = B."SYSTEM_CL"
+						WHERE 1=1
+							  AND IA."USER_ID" = #{g_userId}           
+							  AND IB."USE_YN" = '1'
+							  AND IB."AUTH_CL" = '1'
+							  AND IC."USE_YN" = '1'
+							  AND A."PROG_URL" = #{progURI} 
+							  AND A."USE_YN" = '1'
+							  AND B."USE_YN" = '1') B , CTE_TABLE C WHERE C."SUBS" = B."PROG_NO_B"
+		)
+		SELECT /* [htmlAuthorityFilter.sqlx][htmlAuthority.selectProgramHierarchyList][20120402][이현재, DB2 Convet - 김준우] */
+				AA."PROG_CD",
+		       	AA."PROG_NM"
+		FROM 	CTE_TABLE AA
+		ORDER BY AA."PROG_LVL" ASC
+	</select>
+	<!-- selectProgramHierachyList와 같은 결과를 출력하지만 사용자별 권한조건을 체크하지 않는 쿼리임. -->
+	<select id="selectProgramHierachyListNoAuth" resultType="HMap">
+		WITH RECURSIVE CTE_TABLE("PROG_CD", "PROG_NM", "PROG_LVL", "PROG_NO_A", "PROG_NO_B", "SUBS")
+		AS
+		(
+			   SELECT	
+						A."PROG_CD", 
+	      				A."PROG_NM",
+	      				A."PROG_LVL",
+	      				A."PROG_NO_A",
+	      				A."PROG_NO_B",
+	      				A."SUBS"
+				   FROM
+					   (SELECT DISTINCT(A."PROG_NO") AS "PROG_NO_A",
+							  B."PROG_NO" AS "PROG_NO_B",
+							  SUBSTRING(A."PROG_NO", 1, CAST((B."PROG_LVL"-1)*2 AS integer)) AS "SUBS",
+							  B."PROG_LVL",
+							  B."PROG_CD",
+							  B."PROG_NM"
+		         		FROM	"SYS_PROGRAM" A JOIN
+								"SYS_PROGRAM" B ON A."SYSTEM_CL" = B."SYSTEM_CL"
+						WHERE 1=1
+							  AND A."PROG_URL" = #{progURI} 
+							  AND A."USE_YN" = '1'
+							  AND B."USE_YN" = '1') A
+				        
+			   WHERE A."PROG_NO_B" = A."PROG_NO_A"
+		       
+			   UNION ALL      
+		        
+			   SELECT	
+						B."PROG_CD", 
+	      				B."PROG_NM",
+	      				B."PROG_LVL",
+	      				B."PROG_NO_A",
+	      				B."PROG_NO_B",
+	      				B."SUBS"
+				   FROM
+					   (SELECT DISTINCT(A."PROG_NO") AS "PROG_NO_A",
+							  B."PROG_NO" AS "PROG_NO_B",
+							  SUBSTRING(A."PROG_NO", 1, CAST((B."PROG_LVL"-1)*2 AS integer)) AS "SUBS",
+							  B."PROG_LVL",
+							  B."PROG_CD",
+							  B."PROG_NM"
+		         		FROM	"SYS_PROGRAM" A JOIN
+								"SYS_PROGRAM" B ON A."SYSTEM_CL" = B."SYSTEM_CL"
+						WHERE 1=1
+							  AND A."PROG_URL" = #{progURI} 
+							  AND A."USE_YN" = '1'
+							  AND B."USE_YN" = '1') B , CTE_TABLE C WHERE C."SUBS" = B."PROG_NO_B"
+		)
+		SELECT /* [htmlAuthorityFilter.sqlx][htmlAuthority.selectProgramHierachyListNoAuth][20120402][이현재, DB2 Convet - 김준우] */
+				AA."PROG_CD",
+		    	AA."PROG_NM"
+		FROM 	CTE_TABLE AA 
+		ORDER BY AA."PROG_LVL" ASC
+	</select>	
+</mapper>

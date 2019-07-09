@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="deposit">
+	<!-- 예치금관리 조회 -->
+	<select id="getDepositList" resultType="HMap">
+		SELECT  /* [depositService.sqlx][deposit.getDepositList][예치금관리 조회][최진영][2016.12.06] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY "CUST_NO" ASC) AS "ROWCNT"
+				      FROM 	(
+				      			SELECT	A."CUST_NO",
+										A."CUST_NM",
+										B."CONT_NM",
+										A."TEL",
+										A."HP",
+										B."CONT_DT",
+										B."TERMS_CD",
+										B."SHOP_CD",
+										A."ADDR1" || A."ADDR2" as "ADDR",
+										A."CUST_STATUS_CD",
+										B."PAY_STATUS_CD",
+										'' AS "LAST_PAY_DT",
+										B."DELAY_REQ_START_DT",
+										0 AS "REST_AMT",
+								        <!-- 그리드 sorting -->
+										<if test='sidx != null and sidx !=""'>					    
+											ROW_NUMBER() OVER (
+											<trim prefix="ORDER BY">
+											<if test="sidx == &quot;CUST_NO&quot;">A."CUST_NO"</if>
+											<if test="sidx == &quot;CUST_NM&quot;">A."CUST_NM"</if>
+											<if test="sidx == &quot;CONT_NO&quot;">B."CONT_NO"</if>
+											<if test="sidx == &quot;CONT_NM&quot;">B."CONT_NM"</if>
+											<if test="sord == &quot;asc&quot;">ASC</if>
+											<if test="sord == &quot;desc&quot;">DESC</if>
+											</trim>
+										 	) AS "ROWNUM"
+									  	</if>				    						    
+										<!--// 그리드 sorting -->
+										<if test="sidx == null">
+										ROW_NUMBER() OVER (ORDER BY A."CUST_NO" ASC) AS "ROWNUM"
+										</if>
+  							   	  FROM	"CUSTOMER" A JOIN "CONTRACT" B ON A."CUST_NO" = B."CUST_NO"
+ 								 WHERE 	1 = 1
+ 								 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;A&quot;">
+ 								 	AND A."CUST_NM" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;B&quot;">
+ 								 	AND B."CONT_NM" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;C&quot;">
+ 								 	AND A."TEL" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;D&quot;">
+ 								 	AND A."HP" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;E&quot;">
+ 								 	AND B."CONT_DOC_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SHOP_CD != null and SHOP_CD != &quot;&quot;">
+ 								 	AND B."SHOP_CD" = #{SHOP_CD}
+ 								 </if>
+ 								 <if test="TERMS_CD != null and TERMS_CD != &quot;&quot;">
+ 								 	AND B."TERMS_CD" = #{TERMS_CD}
+ 								 </if>
+
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;A&quot;"><!-- 가입일 -->
+ 								 	AND B."CONT_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;B&quot;"><!-- 출금시작일 -->
+ 								 	AND B."PAY_START_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;C&quot;"><!-- 출금종료일 -->
+ 								 	AND B."PAY_END_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;D&quot;"><!-- 해지일 -->
+ 								 	AND B."TERMINATION_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 
+ 								 <if test="CUST_STATUS_CD != null and CUST_STATUS_CD != &quot;&quot;">
+ 								 	AND B."CUST_STATUS_CD" = #{CUST_STATUS_CD}
+ 								 </if>
+ 								 <if test="PAYMENT_STATUS_CD != null and PAYMENT_STATUS_CD != &quot;&quot;">
+ 								 	AND B."PAYMENT_STATUS_CD" = #{PAYMENT_STATUS_CD}
+ 								 </if>
+      						) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST(#{END_ROW} AS NUMERIC)
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;= CAST(#{START_ROW} AS NUMERIC)
+    </select>
+    
+	<!-- 예치금관리 데이터 총 갯수 조회 -->
+    <select id="getDepositListTotalCount" resultType="int">
+    	SELECT  /* [depositService.sqlx][deposit.getDepositListTotalCount][예치금관리 데이터 총 갯수 조회][최진영][2016.12.06] */
+                COUNT(1)
+          FROM  "CUSTOMER" A JOIN "CONTRACT" B ON A."CUST_NO" = B."CUST_NO"
+         WHERE 	1 = 1
+		 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;A&quot;">
+		 	AND A."CUST_NM" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;B&quot;">
+		 	AND B."CONT_NM" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;C&quot;">
+		 	AND A."TEL" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;D&quot;">
+		 	AND A."HP" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_TYPE == &quot;E&quot;">
+		 	AND B."CONT_DOC_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SHOP_CD != null and SHOP_CD != &quot;&quot;">
+		 	AND B."SHOP_CD" = #{SHOP_CD}
+		 </if>
+		 <if test="TERMS_CD != null and TERMS_CD != &quot;&quot;">
+		 	AND B."TERMS_CD" = #{TERMS_CD}
+		 </if>
+
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;A&quot;"><!-- 가입일 -->
+		 	AND B."CONT_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;B&quot;"><!-- 출금시작일 -->
+		 	AND B."PAY_START_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;C&quot;"><!-- 출금종료일 -->
+		 	AND B."PAY_END_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;D&quot;"><!-- 해지일 -->
+		 	AND B."TERMINATION_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 
+		 <if test="CUST_STATUS_CD != null and CUST_STATUS_CD != &quot;&quot;">
+		 	AND B."CUST_STATUS_CD" = #{CUST_STATUS_CD}
+		 </if>
+		 <if test="PAYMENT_STATUS_CD != null and PAYMENT_STATUS_CD != &quot;&quot;">
+		 	AND B."PAYMENT_STATUS_CD" = #{PAYMENT_STATUS_CD}
+		 </if>
+    </select>
+    
+   	<!-- 예치금 등록 -->
+   	<insert id="inserteDeposit">
+   		INSERT /* [depositService.sqlx][deposit.inserteDeposit][예치금 등록][최진영][2016.12.06] */
+   		INTO "CUSTOMER"(
+            "CUST_NO"
+            , "CUST_NM"
+            , "CUST_BIRTH"
+            , "TEL"
+            , "HP"
+            , "ETC_RELATION1"
+            , "ETC_PHONE1"
+            , "ETC_RELATION2"
+            , "ETC_PHONE2"
+            , "ETC_RELATION3"
+            , "ETC_PHONE3"
+            , "EMAIL"
+            , "ZIP_CD"
+            , "ADDR1"
+            , "ADDR2"
+            , "CUST_STATUS_CD"
+            , "MEMO"
+            , "REG_ID"
+            , "REG_DTM"
+            )
+	    VALUES (
+			#{CUST_NO}
+			, #{CUST_NM}
+			, #{CUST_BIRTH}
+			, #{TEL}
+			, #{HP}
+			, #{ETC_RELATION1}
+			, #{ETC_PHONE1}
+			, #{ETC_RELATION2}
+			, #{ETC_PHONE2}
+			, #{ETC_RELATION3}
+			, #{ETC_PHONE3}
+			, #{EMAIL}
+			, #{ZIP_CD}
+			, #{ADDR1}
+			, #{ADDR2}
+			, #{CUST_STATUS_CD}
+			, #{MEMO}
+			, #{g_userId}
+			, NOW()
+	    	)
+    </insert>
+	
+</mapper>

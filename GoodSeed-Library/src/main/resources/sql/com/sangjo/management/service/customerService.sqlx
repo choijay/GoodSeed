@@ -1,0 +1,408 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="customer">
+	<!-- 고객관리 조회 -->
+	<select id="getCustomerList" resultType="HMap">
+		SELECT  /* [customerService.sqlx][customer.getCustomerList][고객관리 조회][최진영][2016.12.06] */
+				PAGING_T2.*,
+				T."PROCESS_DT" AS "LAST_PAY_DT",
+				COALESCE(T."TOT_PAY_AMT", 0) AS "TOT_PAY_AMT",
+				COALESCE((PAGING_T2."MATURITY_AMT" - T."TOT_PAY_AMT"), 0) AS "REST_AMT"
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY PAGING_T1."CUST_NO" ASC) AS "ROWCNT"
+				      FROM 	(
+				      			SELECT	A."CUST_NO",
+										A."CUST_NM",
+										A."CUST_BIRTH",
+										B."CONT_NO",
+										B."CONT_NM",
+										A."TEL",
+										A."HP",
+										B."CONT_DT",
+										B."TERMS_CD",
+										C."SHOP_NM",
+										A."ADDR1" || A."ADDR2" as "ADDR",
+										A."CUST_STATUS_CD",
+										B."CONT_STATUS_CD",
+										B."PAY_STATUS_CD",
+										B."ACCOUNT_NO",
+										B."ACCOUNT_NM",
+										B."MATURITY_AMT",
+								        <!-- 그리드 sorting -->
+										<if test='sidx != null and sidx !=""'>					    
+											ROW_NUMBER() OVER (
+											<trim prefix="ORDER BY">
+											<if test="sidx == &quot;CUST_NO&quot;">A."CUST_NO"</if>
+											<if test="sidx == &quot;CUST_NM&quot;">A."CUST_NM"</if>
+											<if test="sidx == &quot;CONT_NO&quot;">B."CONT_NO"</if>
+											<if test="sidx == &quot;CONT_NM&quot;">B."CONT_NM"</if>
+											<if test="sord == &quot;asc&quot;">ASC</if>
+											<if test="sord == &quot;desc&quot;">DESC</if>
+											</trim>
+										 	) AS "ROWNUM"
+									  	</if>				    						    
+										<!--// 그리드 sorting -->
+										<if test="sidx == null">
+										ROW_NUMBER() OVER (ORDER BY A."CUST_NO" ASC) AS "ROWNUM"
+										</if>
+  							   	  FROM	"CUSTOMER" A 
+  							   	  		LEFT OUTER JOIN "CONTRACT" B ON A."CUST_NO" = B."CUST_NO"
+  							   	  		LEFT OUTER JOIN "SHOP" C ON B."SHOP_CD" = C."SHOP_CD"
+ 								 WHERE 	1 = 1
+ 								 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;A&quot;">
+ 								 	AND (
+ 								 		A."CUST_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+ 								 		OR 
+ 								 		B."CONT_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+ 								 	)
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;C&quot;">
+ 								 	AND A."HP" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;D&quot;">
+ 								 	AND B."CONT_DOC_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;E&quot;">
+ 								 	AND A."CUST_BIRTH" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;F&quot;">
+ 								 	AND B."ACCOUNT_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+ 								 </if>
+ 								 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;G&quot;">
+ 								 	AND B."ACCOUNT_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+ 								 </if>
+ 								 <if test="SHOP_NM != null and SHOP_NM != &quot;&quot;">
+ 								 	AND C."SHOP_NM" = #{SHOP_NM}
+ 								 </if>
+ 								 <if test="TERMS_CD != null and TERMS_CD != &quot;&quot;">
+ 								 	AND B."TERMS_CD" = #{TERMS_CD}
+ 								 </if>
+
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;A&quot;"><!-- 가입일 -->
+ 								 	AND B."CONT_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;B&quot;"><!-- 출금시작일 -->
+ 								 	AND B."PAY_START_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;D&quot;"><!-- 해지일 -->
+ 								 	AND B."TERMINATION_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 
+ 								 <if test="CUST_STATUS_CD != null and CUST_STATUS_CD != &quot;&quot;">
+ 								 	AND A."CUST_STATUS_CD" = #{CUST_STATUS_CD}
+ 								 </if>
+ 								 <if test="CONT_STATUS_CD != null and CONT_STATUS_CD != &quot;&quot;">
+ 								 	AND B."CONT_STATUS_CD" = #{CONT_STATUS_CD}
+ 								 </if>
+ 								 <if test="PAY_STATUS_CD != null and PAY_STATUS_CD != &quot;&quot;">
+ 								 	AND B."PAY_STATUS_CD" = #{PAY_STATUS_CD}
+ 								 </if>
+ 								 <if test="VISIBLE_PAY_STATUS_09 != null and VISIBLE_PAY_STATUS_09 == &quot;false&quot;">
+ 								 	AND B."PAY_STATUS_CD" != '09'
+ 								 </if>
+      						) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST(#{END_ROW} AS NUMERIC)
+   				) PAGING_T2
+   				LEFT OUTER JOIN (
+   					SELECT D."CONT_NO", MAX(D."PROCESS_DT") AS "PROCESS_DT", SUM(D."RESULT_PAID_AMT") AS "TOT_PAY_AMT"
+					FROM "CMS_FILE_DATA" D
+					WHERE D."CMS_FILE_NO" LIKE 'EB21%'
+					AND D."RESULT_CD" = 'Y'
+					GROUP BY D."CONT_NO"
+				) T
+				ON T."CONT_NO" =  PAGING_T2."CONT_NO" 
+				WHERE 	PAGING_T2."ROWCNT" &gt;= CAST(#{START_ROW} AS NUMERIC)
+    </select>
+    
+	<!-- 고객관리 데이터 총 갯수 조회 -->
+    <select id="getCustomerListTotalCount" resultType="int">
+    	SELECT  /* [customerService.sqlx][customer.getCustomerListTotalCount][고객관리 데이터 총 갯수 조회][최진영][2016.12.06] */
+                COUNT(1)
+          FROM  "CUSTOMER" A 
+          		LEFT OUTER JOIN "CONTRACT" B ON A."CUST_NO" = B."CUST_NO"
+          		LEFT OUTER JOIN "SHOP" C ON B."SHOP_CD" = C."SHOP_CD"
+         WHERE 	1 = 1
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;A&quot;">
+		 	AND (
+		 		A."CUST_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+		 		OR 
+		 		B."CONT_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+		 	)
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;C&quot;">
+		 	AND A."HP" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;D&quot;">
+		 	AND B."CONT_DOC_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;E&quot;">
+		 	AND A."CUST_BIRTH" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;F&quot;">
+		 	AND B."ACCOUNT_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;G&quot;">
+		 	AND B."ACCOUNT_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+		 </if>
+		 
+		 <if test="SHOP_NM != null and SHOP_NM != &quot;&quot;">
+		 	AND C."SHOP_NM" = #{SHOP_NM}
+		 </if>
+		 <if test="TERMS_CD != null and TERMS_CD != &quot;&quot;">
+		 	AND B."TERMS_CD" = #{TERMS_CD}
+		 </if>
+
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;A&quot;"><!-- 가입일 -->
+		 	AND B."CONT_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;B&quot;"><!-- 출금시작일 -->
+		 	AND B."PAY_START_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;D&quot;"><!-- 해지일 -->
+		 	AND B."TERMINATION_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 
+		 <if test="CUST_STATUS_CD != null and CUST_STATUS_CD != &quot;&quot;">
+		 	AND A."CUST_STATUS_CD" = #{CUST_STATUS_CD}
+		 </if>
+		 <if test="CONT_STATUS_CD != null and CONT_STATUS_CD != &quot;&quot;">
+		 	AND B."CONT_STATUS_CD" = #{CONT_STATUS_CD}
+		 </if>
+		 <if test="PAY_STATUS_CD != null and PAY_STATUS_CD != &quot;&quot;">
+		 	AND B."PAY_STATUS_CD" = #{PAY_STATUS_CD}
+		 </if>
+		 <if test="VISIBLE_PAY_STATUS_09 != null and VISIBLE_PAY_STATUS_09 == &quot;false&quot;">
+		 	AND B."PAY_STATUS_CD" != '09'
+		 </if>
+    </select>
+    
+   	<!-- 고객 등록 -->
+   	<insert id="insertCustomer">
+   		<selectKey keyProperty="CUST_NO" resultType="String" order="BEFORE">
+        	SELECT TO_CHAR(NOW(), 'YYYYMM') || LPAD(NEXTVAL('"SQ_CUST_NO"')::text, 7, '0')
+        </selectKey>
+   		INSERT /* [customerService.sqlx][customer.insertCustomer][고객 등록][최진영][2016.12.06] */
+   		INTO "CUSTOMER"(
+            "CUST_NO"
+            , "CUST_NM"
+            , "CUST_BIRTH"
+            , "TEL"
+            , "HP"
+            , "ETC_RELATION1"
+            , "ETC_PHONE1"
+            , "ETC_RELATION2"
+            , "ETC_PHONE2"
+            , "ETC_RELATION3"
+            , "ETC_PHONE3"
+            , "EMAIL"
+            , "ZIP_CD"
+            , "ADDR1"
+            , "ADDR2"
+            , "ADDR3"
+            , "CUST_STATUS_CD"
+            , "MEMO"
+            , "REG_ID"
+            , "REG_DTM"
+            )
+	    VALUES (
+			#{CUST_NO}
+			, #{CUST_NM}
+			, REPLACE(#{CUST_BIRTH}, '-', '')
+			, #{TEL}
+			, #{HP}
+			, #{ETC_RELATION1}
+			, #{ETC_PHONE1}
+			, #{ETC_RELATION2}
+			, #{ETC_PHONE2}
+			, #{ETC_RELATION3}
+			, #{ETC_PHONE3}
+			, #{EMAIL}
+			, #{ZIP_CD}
+			, #{ADDR1}
+			, #{ADDR2}
+			, #{ADDR3}
+			, '021001'
+			, #{MEMO}
+			, #{g_userId}
+			, NOW()
+	    	)
+    </insert>
+	
+	<update id="updateCustomer">
+		UPDATE "CUSTOMER"
+		SET "CUST_NM" = #{CUST_NM}
+			, "CUST_BIRTH" = REPLACE(#{CUST_BIRTH}, '-', '')
+			, "TEL" = #{TEL}
+			, "HP" = #{HP}
+			, "ETC_RELATION1" = #{ETC_RELATION1}
+			, "ETC_PHONE1" = #{ETC_PHONE1}
+			, "ETC_RELATION2" = #{ETC_RELATION2}
+			, "ETC_PHONE2" = #{ETC_PHONE2}
+			, "ETC_RELATION3" = #{ETC_RELATION3}
+			, "ETC_PHONE3" = #{ETC_PHONE3}
+			, "EMAIL" = #{EMAIL}
+			, "ZIP_CD" = #{ZIP_CD}
+			, "ADDR1" = #{ADDR1}
+			, "ADDR2" = #{ADDR2}
+			, "ADDR3" = #{ADDR3}
+			, "CUST_STATUS_CD" = #{CUST_STATUS_CD}
+			, "MEMO" = #{MEMO}
+			, "UPD_ID" = #{g_userId}
+            , "UPD_DTM" = NOW()
+		WHERE "CUST_NO" = #{CUST_NO}
+	</update>
+	
+	<select id="getCustomer" resultType="HMap">
+		SELECT "CUST_NO"
+            , "CUST_NM"
+            , "CUST_BIRTH"
+            , "TEL"
+            , "HP"
+            , "ETC_RELATION1"
+            , "ETC_PHONE1"
+            , "ETC_RELATION2"
+            , "ETC_PHONE2"
+            , "ETC_RELATION3"
+            , "ETC_PHONE3"
+            , "EMAIL"
+            , "ZIP_CD"
+            , "ADDR1"
+            , "ADDR2"
+            , "ADDR3"
+            , "CUST_STATUS_CD"
+            , "MEMO"
+		  FROM "CUSTOMER"
+		 WHERE "CUST_NO" = #{CUST_NO}
+	</select>
+	
+	<select id="getInProgressContract" resultType="int">
+		SELECT COUNT(*)
+		  FROM "CONTRACT"
+		 WHERE "CUST_NO" = #{CUST_NO}
+		   AND "CONT_STATUS_CD" != '01'
+	</select>
+	
+	<delete id="deleteCustomer">
+		DELETE FROM "CUSTOMER"
+		WHERE "CUST_NO" = #{CUST_NO}
+	</delete>
+	
+	<select id="getCustomerListForExcelDown" resultType="HMap">
+	  	SELECT	A."CUST_NO",
+			A."CUST_NM",
+			A."CUST_BIRTH",
+			B."CONT_NO",
+			B."CONT_NM",
+			A."ZIP_CD",
+			A."TEL",
+			A."HP",
+			B."CONT_DT",
+			(SELECT D."TERMS_NM" FROM "TERMS" D WHERE D."TERMS_CD" = B."TERMS_CD") AS "TERMS_NM",
+			C."SHOP_NM",
+			A."ADDR1" || A."ADDR2" as "ADDR",
+			(SELECT D."COMM_CD_NM" FROM "SYS_CODE" D WHERE D."COMM_CL_CD" ='GS022' AND D."COMM_CD" = A."CUST_STATUS_CD") AS "CUST_STATUS_NM",
+			(SELECT D."COMM_CD_NM" FROM "SYS_CODE" D WHERE D."COMM_CL_CD" ='GS024' AND D."COMM_CD" = B."CONT_STATUS_CD") AS "CONT_STATUS_NM",
+			(SELECT D."COMM_CD_NM" FROM "SYS_CODE" D WHERE D."COMM_CL_CD" ='GS023' AND D."COMM_CD" = B."PAY_STATUS_CD") AS "PAY_STATUS_NM",
+			(SELECT D."COMM_CD_NM" FROM "SYS_CODE" D WHERE D."COMM_CL_CD" ='GS021' AND D."COMM_CD" = B."BANK_CD") AS "BANK_NM",
+			B."ACCOUNT_NO",
+			B."ACCOUNT_NM",
+			T."PROCESS_DT" AS "LAST_PAY_DT",
+			CAST(COALESCE(T."TOT_PAY_AMT", 0) AS INTEGER) AS "TOT_PAY_AMT",
+			CAST(COALESCE((B."MATURITY_AMT" - T."TOT_PAY_AMT"), 0) AS INTEGER) AS "REST_AMT",
+	        <!-- 그리드 sorting -->
+			<if test='sidx != null and sidx !=""'>					    
+				ROW_NUMBER() OVER (
+				<trim prefix="ORDER BY">
+				<if test="sidx == &quot;CUST_NO&quot;">A."CUST_NO"</if>
+				<if test="sidx == &quot;CUST_NM&quot;">A."CUST_NM"</if>
+				<if test="sidx == &quot;CONT_NO&quot;">B."CONT_NO"</if>
+				<if test="sidx == &quot;CONT_NM&quot;">B."CONT_NM"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+				<if test="sord == &quot;desc&quot;">DESC</if>
+				</trim>
+			 	) AS "ROWNUM"
+		  	</if>				    						    
+			<!--// 그리드 sorting -->
+			<if test="sidx == null">
+			ROW_NUMBER() OVER (ORDER BY A."CUST_NO" ASC) AS "ROWNUM"
+			</if>
+		   	  FROM	"CUSTOMER" A 
+		   	  		LEFT OUTER JOIN "CONTRACT" B ON A."CUST_NO" = B."CUST_NO"
+		   	  		LEFT OUTER JOIN "SHOP" C ON B."SHOP_CD" = C."SHOP_CD"
+		   	  		LEFT OUTER JOIN (
+	   					SELECT D."CONT_NO", MAX(D."PROCESS_DT") AS "PROCESS_DT", SUM(D."RESULT_PAID_AMT") AS "TOT_PAY_AMT"
+						FROM "CMS_FILE_DATA" D
+						WHERE D."CMS_FILE_NO" LIKE 'EB21%'
+						AND D."RESULT_CD" = 'Y'
+						GROUP BY D."CONT_NO"
+					) T
+					ON T."CONT_NO" =  B."CONT_NO" 
+			WHERE 	1 = 1
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;A&quot;">
+		 	AND (
+		 		A."CUST_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+		 		OR 
+		 		B."CONT_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+		 	)
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;C&quot;">
+		 	AND A."HP" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;D&quot;">
+		 	AND B."CONT_DOC_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;E&quot;">
+		 	AND A."CUST_BIRTH" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;F&quot;">
+		 	AND B."ACCOUNT_NO" LIKE '%'||#{SEARCH_WORD}||'%'
+		 </if>
+		 <if test="SEARCH_TYPE != null and SEARCH_WORD != null and SEARCH_WORD != '' and SEARCH_TYPE == &quot;G&quot;">
+		 	AND B."ACCOUNT_NM" LIKE '%'||REPLACE(#{SEARCH_WORD}, ' ', '')||'%'
+		 </if>
+		 <if test="SHOP_NM != null and SHOP_NM != &quot;&quot;">
+		 	AND C."SHOP_NM" = #{SHOP_NM}
+		 </if>
+		 <if test="TERMS_CD != null and TERMS_CD != &quot;&quot;">
+		 	AND B."TERMS_CD" = #{TERMS_CD}
+		 </if>
+	
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;A&quot;"><!-- 가입일 -->
+		 	AND B."CONT_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;B&quot;"><!-- 출금시작일 -->
+		 	AND B."PAY_START_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="PERIOD_TYPE != null and PERIOD_TYPE == &quot;D&quot;"><!-- 해지일 -->
+		 	AND B."TERMINATION_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 
+		 <if test="CUST_STATUS_CD != null and CUST_STATUS_CD != &quot;&quot;">
+		 	AND A."CUST_STATUS_CD" = #{CUST_STATUS_CD}
+		 </if>
+		 <if test="CONT_STATUS_CD != null and CONT_STATUS_CD != &quot;&quot;">
+		 	AND B."CONT_STATUS_CD" = #{CONT_STATUS_CD}
+		 </if>
+		 <if test="PAY_STATUS_CD != null and PAY_STATUS_CD != &quot;&quot;">
+		 	AND B."PAY_STATUS_CD" = #{PAY_STATUS_CD}
+		 </if>	
+		 <if test="VISIBLE_PAY_STATUS_09 != null and VISIBLE_PAY_STATUS_09 == &quot;false&quot;">
+		 	AND B."PAY_STATUS_CD" != '09'
+		 </if>
+	</select>
+	
+	<update id="updateCustomerStatus">
+		UPDATE "CUSTOMER" A
+		SET "CUST_STATUS_CD" = CASE WHEN T."ING_CNT" > 0 THEN '021001' ELSE '021002' END
+		FROM (SELECT 	
+				B."CUST_NO",
+				SUM(CASE WHEN B."CONT_STATUS_CD" = '05' OR B."CONT_STATUS_CD" = '06' THEN 0 ELSE 1 END) AS "ING_CNT"
+			FROM "CONTRACT" B
+			WHERE B."CUST_NO" = #{CUST_NO}
+			GROUP BY B."CUST_NO"
+		) T
+		WHERE A."CUST_NO" = T."CUST_NO"
+		AND A."CUST_NO" = #{CUST_NO}
+	</update>
+</mapper>

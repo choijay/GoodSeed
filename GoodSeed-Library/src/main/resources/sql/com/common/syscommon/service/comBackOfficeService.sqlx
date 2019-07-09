@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="comBackOffice">
+	<!-- 사용자 바로가기 입력 -->
+	<insert id="insertUserUrl">
+		INSERT 	/* [comBackOffice.sqlx][comBackOffice.insertUserUrl][2012.01.26][김병욱] */
+		INTO 	"SYS_USERURL"
+			( "USER_ID"
+			, "URLADDR1"
+			, "URLADDR2"
+			, "URLADDR3"
+			, "URLADDR4"
+			, "URLADDR5"
+			, "REG_DTM" )
+		VALUES ( #{g_userId}
+			 , #{urladdr1}
+			 , #{urladdr2}
+			 , #{urladdr3}
+		     , #{urladdr4}
+			 , #{urladdr5}
+			 , NOW()
+		)
+	</insert>
+	<!-- 사용자 바로가기 삭제 -->
+	<delete id="deleteUserUrl">
+		DELETE	/* [comBackOffice.sqlx][comBackOffice.deleteUserUrl][2012.01.26][김병욱] */
+		FROM	"SYS_USERURL"
+		WHERE 	"USER_ID" = #{g_userId}
+	</delete>
+	<!-- 사용자 바로가기 조회-->
+	<select id="getUserUrl" resultType="HMap">
+		SELECT	/* [comBackOffice.sqlx][comBackOffice.getUserUrl][2012.01.26][김병욱] */
+				"URLADDR1"
+			 	, "URLADDR2"
+			 	, "URLADDR3"
+			 	, "URLADDR4"
+			 	, "URLADDR5"
+		FROM 	"SYS_USERURL"
+		WHERE  	"USER_ID" = #{g_userId}
+	</select>	
+	<!-- 마이메뉴 등록 -->
+	<insert id="insertUserMenu">
+		INSERT 	/* [comBackOffice.sqlx][comBackOffice.insertUserMenu][2012.01.26][김병욱] */
+		INTO 	"SYS_MYMENU"
+			( "USER_ID"
+			, "PROG_CD"
+			, "MENU_SEQ"
+			, "REG_ID"
+			, "REG_DTM"
+			)
+		VALUES ( #{g_userId}
+			 , #{progCd}
+			 , NEXTVAL('"SQ_GS_MYMENU"')
+			 , #{g_userId}
+			 , NOW()
+		)
+	</insert>
+	<!-- 마이메뉴 삭제 -->
+	<delete id="deleteUserMenu">
+		DELETE 	/* [authorityService.xml][comBackOffice.deleteUserMenu][김병욱] */
+    	FROM 	"SYS_MYMENU"
+    	WHERE 	"USER_ID" = #{g_userId}
+    	AND 	"PROG_CD" = #{progCd}
+    </delete>
+    <!-- 마이메뉴 조회-->
+	<select id="getUserMenu" resultType="HMap">
+		SELECT  /* [comBackOffice.sqlx][comBackOffice.getUserMenu][2012.01.25][김병욱] */
+				A."PROG_CD" AS "PROGCD",
+				A."PROG_NM" AS "PROGNM",
+				A."SYSTEM_CL" AS "SYSTEMCL",
+				'1' AS "PROGLVL",
+				A."PROG_NO" AS "PROGNO",
+				A."PROG_URL" AS "PROGURL"
+		FROM 	"SYS_PROGRAM" A LEFT JOIN "SYS_MYMENU" B ON A."PROG_CD" = B."PROG_CD"
+		WHERE 	B."USER_ID" =  #{g_userId}
+    	AND 	A."MENU_YN" = '1' 
+    	AND A."USE_YN" = '1'
+		ORDER BY A."SYSTEM_CL", A."PROG_NO"
+	</select>
+	
+	<!-- 마이메뉴 조회(HTML4.01)-->
+	<select id="getUserMenuHTML" resultType="HMap">
+		SELECT  /* [comBackOffice.sqlx][comBackOffice.getUserMenuHTML][2015.09.11][심광섭] */
+				A."PROG_CD" AS "PROGCD",
+				A."PROG_NO" AS "PROGNO",
+				SUBSTR(A."PROG_NO", 0, LENGTH(A."PROG_NO") - 2) AS "PROGPNO",
+				A."PROG_URL" AS "PROGURL",
+				A."PROG_NM" AS "PROGNM"
+		FROM 	"SYS_PROGRAM" A LEFT JOIN "SYS_MYMENU" B ON A."PROG_CD" = B."PROG_CD" AND A."SYSTEM_CL" = 'HTML'
+		WHERE 	B."USER_ID" =  #{g_userId}
+    	AND 	A."MENU_YN" = '1' AND A."USE_YN" = '1'
+		ORDER BY A."PROG_NO"
+	</select>
+	
+	<!-- 메뉴히스토리 조회(HTML4.01)-->
+	<select id="getRecentMenuHTML" resultType="HMap">
+		SELECT	/* [comBackOffice.sqlx][comBackOffice.getRecentMenuHTML][심광섭][2015.09.11] */
+				BB."PROG_CD" AS "PROGCD",
+      			BB."PROG_NM" AS "PROGNM",
+				BB."SYSTEM_CL" AS "SYSTEMCL",
+				BB."PROG_NO" AS "PROGNO",
+				BB."PROG_URL" AS "PROGURL"
+		FROM (
+  			SELECT "PRO_STA_DTM", "PROG_CD", "PROG_LVL"
+  			FROM (
+    			SELECT  TO_CHAR("PRO_STA_DTM",'YYYYMMDD') AS "PRO_STA_DTM",
+    					"PROG_CD",
+    					CASE WHEN "PROG_CD" IS NULL THEN '1' ELSE '2' END AS "PROG_LVL"
+				FROM 	"SYS_USER_LOG"
+				WHERE 	"USER_ID"	= #{g_userId}
+				AND 	"LOG_CL" 	= '3'
+				AND 	"PRO_STA_DTM" <![CDATA[>=]]> NOW() - interval '7 day'
+    			/* group by ROLLUP( TO_CHAR("PRO_STA_DTM",'YYYYMMDD'),"PROG_CD") */
+    			group by TO_CHAR("PRO_STA_DTM",'YYYYMMDD'), "PROG_CD"
+  			) A
+  			WHERE A."PRO_STA_DTM" IS NOT NULL
+		) AA LEFT OUTER JOIN "SYS_PROGRAM" BB ON AA."PROG_CD" = BB."PROG_CD" AND BB."SYSTEM_CL" = 'HTML'
+		WHERE 	BB."MENU_YN" = '1'
+		AND		BB."PROG_URL" IS NOT NULL
+		ORDER BY AA."PRO_STA_DTM" DESC, AA."PROG_LVL", BB."PROG_CD"
+	</select>
+	
+</mapper>

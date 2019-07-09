@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="eb14">
+
+	<!-- EB14 자료를 EB13에 업데이트한다. -->
+	<update id="updateCMSFileDataForResult">
+		UPDATE "CMS_FILE_DATA" A
+		SET	"RESULT_CD" = B."RESULT_CD"
+			, "ERROR_CD" = B."ERROR_CD"
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND A."PAYER_NO" = B."PAYER_NO"
+		AND A."CMS_FILE_NO" = #{EB13_CMS_FILE_NO}
+		AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</update>
+
+	<!-- 
+		REQ_TYPE- 1:신규, 3:해지, 7:고객해지
+		CMS_APPROVE_STATUS_CD- 02:승인완료, 04:해지완료, 06:신청오류
+		PAY_STATUS_CD- 02:납부중, 08:해지
+		CONT_STATUS_CD- 03:진행중, 해지는 기존 해지코드 그대로(05 또는 06)
+	 -->
+	<update id="updateContractForSuccess">
+		UPDATE "CONTRACT" A
+		SET "CMS_APPROVE_STATUS_CD" = CASE B."REQ_TYPE" WHEN '1' THEN '02' WHEN '3' THEN '04' WHEN '7' THEN '04' ELSE '06' END
+			, "PAY_STATUS_CD" = CASE B."REQ_TYPE" WHEN '1' THEN '02' WHEN '3' THEN '08' ELSE '08' END
+			, "CONT_STATUS_CD" = CASE B."REQ_TYPE" WHEN '1' THEN '03' ELSE "CONT_STATUS_CD" END
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{EB13_CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."ERROR_CD" = ''
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+	
+	<!-- 해지건을 CMS_PAYER 테이블에 반영, 해지완료처리 -->
+	<update id="updateContractForSuccessOfTerminate">
+		UPDATE "CMS_PAYER" A
+		SET "CMS_APPROVE_STATUS_CD" = '04'
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{EB13_CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."ERROR_CD" = ''
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+
+	<!-- 
+		CMS_APPROVE_STATUS_CD- 02:승인완료, 04:해지완료, 06:신청오류
+		PAY_STATUS_CD- 02:납부중, 08:해지
+		CONT_STATUS_CD- 03:진행중, 06:중도해지, 07:해약
+	 -->
+	<update id="updateContractForFail">
+		UPDATE "CONTRACT" A
+		SET "CMS_APPROVE_STATUS_CD" = '06'
+			, "CMS_ERROR_CD" = B."ERROR_CD"
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."ERROR_CD" <![CDATA[<>]]> ''
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+	
+	<update id="updateCustomerStatus">
+		UPDATE "CUSTOMER" A
+		SET "CUST_STATUS_CD" = '021002'
+		FROM "CMS_FILE_DATA" B, "CONTRACT" C
+		WHERE B."CMS_FILE_NO" = #{EB13_CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."PAYER_NO" = C."PAYER_NO"
+		AND C."CUST_NO" = A."CUST_NO"
+		AND A."CUST_STATUS_CD" = '021001'
+		AND NOT EXISTS (
+				SELECT 1
+				FROM "CONTRACT" S
+				WHERE S."CUST_NO" = A."CUST_NO"
+				AND S."CONT_STATUS_CD" NOT IN ('05','06')
+		)
+	</update>
+	
+</mapper>

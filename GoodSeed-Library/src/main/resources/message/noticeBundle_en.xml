@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+
+    <!--
+    **************************************************
+    * 공통 메세지
+    **************************************************
+    -->
+    <!-- 성공메세지  -->
+    <entry key="MSG_COM_SUC_001">ⓔ초기화 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_002">ⓔ추가 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_003">ⓔ저장 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_004">ⓔ등록 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_005">ⓔ취소 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_006">ⓔ삭제 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_007">ⓔ{0}건이 정상처리 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_008">ⓔ변경이 완료되었습니다.</entry>
+    <entry key="MSG_COM_SUC_009">ⓔ성공적으로 처리 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_010">ⓔ성공적으로 이관 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_011">ⓔ조회 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_012">ⓔ업로드 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_013">ⓔ다운로드가 완료되었습니다.</entry>
+    <entry key="MSG_COM_SUC_014">ⓔ복사 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_015">ⓔ{0}건이 조회 되었습니다.</entry>
+    <entry key="MSG_COM_SUC_016">ⓔOnDemand 배치 요청이 완료되었습니다. 배치 실행 상태를 확인해 주시기 바랍니다. 실행번호-{0}</entry>
+    <entry key="MSG_COM_SUC_017">Message</entry>
+    <entry key="MSG_COM_SUC_999">ⓔ{0}</entry><!-- 비어 있는 메시지 -->
+
+    <!-- 실패/에러 메세지 -->
+    <entry key="MSG_COM_ERR_001">ⓔ시스템 오류가 발생하였습니다. 시스템관리자에게 문의 바랍니다.</entry>
+    <entry key="MSG_COM_ERR_002">ⓔ지원하지 않는 기능입니다.</entry>
+    <entry key="MSG_COM_ERR_003">ⓔ업로드 경로가 지정되지 않았습니다.</entry>
+    <entry key="MSG_COM_ERR_004">ⓔ파일을 찾을 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_005">ⓔ업로드 가능한 파일이 아닙니다.</entry>
+    <entry key="MSG_COM_ERR_006">ⓔ업로드 가능한 용량을 초과하였습니다.</entry>
+    <entry key="MSG_COM_ERR_007">ⓔ검색된 결과가 없습니다.</entry>
+    <entry key="MSG_COM_ERR_008">ⓔ저장 대상 자료가 존재하지 않습니다.</entry>
+    <entry key="MSG_COM_ERR_009">ⓔReference Key 정보가 없습니다.</entry>
+    <entry key="MSG_COM_ERR_010">ⓔ업로드중 오류가 발생하였습니다.</entry>
+    <entry key="MSG_COM_ERR_011">ⓔData 파일 생성이 되지 않았습니다.</entry>
+    <entry key="MSG_COM_ERR_012">ⓔ출력시 문제가 발생하였습니다.</entry>
+    <entry key="MSG_COM_ERR_013">ⓔ{0} 는 정의 되지 않은 메시지 입니다.</entry>
+    <entry key="MSG_COM_ERR_014">ⓔ조회 처리 중 오류가 발생하였습니다.</entry>
+    <entry key="MSG_COM_ERR_015">ⓔ저장 처리 중 오류가 발생하였습니다.</entry>
+    <entry key="MSG_COM_ERR_016">ⓔ해당 화면이 이미 열려있습니다.</entry>
+    <entry key="MSG_COM_ERR_017">ⓔ현금수송업체에 데이터 전송중 오류가 발생했습니다.</entry>
+    <entry key="MSG_COM_ERR_018">ⓔ{0} 작업시 오류가 발생했습니다.</entry>
+    <entry key="MSG_COM_ERR_019">ⓔ일치하는 {0}이(가) 없습니다.</entry>
+    <entry key="MSG_COM_ERR_020">ⓔ다운로드가 완료되지 않았습니다.</entry>
+    <entry key="MSG_COM_ERR_021">ⓔ최대 조회 건수({0})를 초과하였습니다. 조회 조건을 조정하시기 바랍니다.</entry>
+    <entry key="MSG_COM_ERR_022">ⓔ{0}이(가) 등록되지 않았습니다.</entry>
+    <entry key="MSG_COM_ERR_023">ⓔ도움말 파일이  없습니다.</entry>
+    <entry key="MSG_COM_ERR_024">ⓔ해당 화면 URL을 찾을 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_025">ⓔ상위LEVEL을 찾을 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_026">ⓔ데이터 처리시에는 Filter 해제 후 처리하시기바랍니다.</entry>
+    <entry key="MSG_COM_ERR_027">ⓔ이미 등록된 자료가 존재합니다.{0}</entry>
+    <entry key="MSG_COM_ERR_028">ⓔ{0}은(는) 수정할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_029">ⓔ로그인이 필요한 서비스입니다. 로그인 해 주십시오.</entry>
+    <entry key="MSG_COM_ERR_030">ⓔ해당 기능에 대한 접근 또는 실행 권한이 없습니다.</entry>
+    <entry key="MSG_COM_ERR_031">ⓔ공백 문자는 사용할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_032">ⓔ비밀번호는 8자리 이상이어야 합니다.</entry>
+    <entry key="MSG_COM_ERR_033">ⓔ비밀번호는 영문, 숫자, 특수문자 중 2종 이상 혼용하여야 합니다.</entry>
+    <entry key="MSG_COM_ERR_034">ⓔ비밀번호에는 영문, 숫자, 특수문자 외의 문자를 사용할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_035">ⓔID와 4자리 이상 동일한 비밀번호는 사용할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_036">ⓔ비밀번호에는 4자리 이상 반복되는 문자나 숫자를 사용할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_037">ⓔ비밀번호에는 4자리 이상 연속된 문자나 숫자를 사용할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_038">ⓔ새로운 비밀번호와 현재 비밀번호가 일치합니다</entry>
+    <entry key="MSG_COM_ERR_039">ⓔ신규행만 삭제가 가능합니다. 사용여부체크를 사용하십시오.</entry>
+    <entry key="MSG_COM_ERR_040">ⓔOnDemand 배치 요청이 실패하였습니다. 스케줄러 상태를 확인해 주시기 바랍니다.</entry>
+    <entry key="MSG_COM_ERR_041">ⓔService에서 Service를 호출할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_042">ⓔModule에서 서비스를 호출할 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_043">ⓔ팝업 차단을 해제하여 주십시오.</entry>
+    <entry key="MSG_COM_ERR_044">ⓔ조회후 {0}(이)가 가능합니다.</entry>
+    <entry key="MSG_COM_ERR_045">ⓔFile 을 선택하지 않으셨습니다.</entry>
+    <entry key="MSG_COM_ERR_046">ⓔBookMark에 추가하실 수 없습니다.</entry>
+    <entry key="MSG_COM_ERR_047">ⓔ이미 BookMark에 등록된 메뉴입니다.</entry>
+    <entry key="MSG_COM_ERR_048">ⓔServer연결에 실패 하였습니다.\nNetwork에 이상이 있는지,경로가 맞는지 확인해주시기 바랍니다.</entry>
+    <entry key="MSG_COM_ERR_049">ⓔHTTP 404: Not found, 문서를 찾을 수 없음</entry>
+	<entry key="MSG_COM_ERR_050">ⓔHTTP 405: Method not allowed, 리소스를 허용안함</entry>
+	<entry key="MSG_COM_ERR_051">ⓔHTTP 500: Internal server error, 내부서버 오류(잘못된 스크립트 실행시)</entry>
+	<entry key="MSG_COM_ERR_052">ⓔHTTP 503: Service unavailable, 외부 서비스가 죽었거나 현재 멈춤 상태</entry>
+	<entry key="MSG_COM_ERR_053">ⓔ시스템 점검중 입니다.</entry>
+	<entry key="MSG_COM_ERR_054">ⓔ잘못된 접근입니다.(1)</entry>
+	<entry key="MSG_COM_ERR_055">ⓔNetwork 이상</entry>
+	<entry key="MSG_COM_ERR_056">ⓔHTTP 404: Not found, 문서를 찾을 수 없음</entry>
+	<entry key="MSG_COM_ERR_057">ⓔHTTP 405: Method not allowed, 리소스를 허용안함</entry>
+	<entry key="MSG_COM_ERR_058">ⓔHTTP 500: Internal server error, 내부서버 오류(잘못된 스크립트 실행시)</entry>
+	<entry key="MSG_COM_ERR_059">ⓔ"HTTP 503: Service unavailable, 외부 서비스가 죽었거나 현재 멈춤 상태</entry>
+	<entry key="MSG_COM_ERR_060">ⓔ multipart/form-data 요청이 아닙니다.</entry>
+	<entry key="MSG_COM_ERR_061">ⓔ 업로드 관련 설정이 없습니다.</entry>
+	<entry key="MSG_COM_ERR_062">ⓔ 최대 파라미터 건수를 초과할수 없습니다.</entry>
+	<entry key="MSG_COM_ERR_063">ⓔ문자입력 불가입니다.</entry>
+	<entry key="MSG_COM_ERR_064">ⓔ업로드 할 경로를 찾을 수 없습니다.</entry>
+
+    <!-- 유효성체크 메세지 -->
+    <entry key="MSG_COM_VAL_001">ⓔ{0} 항목은 필수 입력입니다.</entry>
+    <entry key="MSG_COM_VAL_002">ⓔ{0} 항목의 최소길이는 {1} 이상입니다.</entry>
+    <entry key="MSG_COM_VAL_003">ⓔ{0} 항목의 최대값은 {1} 이하입니다.</entry>
+    <entry key="MSG_COM_VAL_004">ⓔ{0} 항목의 최소값은 {1} 이상입니다.</entry>
+    <entry key="MSG_COM_VAL_005">ⓔ{0} 버튼을 클릭하시기 바랍니다.</entry>
+    <entry key="MSG_COM_VAL_006">ⓔ{0}을(를) 입력해 주십시오.</entry>
+    <entry key="MSG_COM_VAL_007">ⓔ{0}을(를) 선택해 주십시오.</entry>
+    <entry key="MSG_COM_VAL_008">ⓔ올바른 주민등록번호가 아닙니다.</entry>
+    <entry key="MSG_COM_VAL_009">ⓔ올바른 법인번호가 아닙니다.</entry>
+    <entry key="MSG_COM_VAL_010">ⓔ체크된 항목이 없습니다. 최소한 1건 이상 체크되어야 합니다.</entry>
+    <entry key="MSG_COM_VAL_011">ⓔ2건 이상 체크되었습니다. 1건만 선택되어야 합니다.</entry>
+    <entry key="MSG_COM_VAL_012">ⓔ날짜는 숫자만 입력하십시오.</entry>
+    <entry key="MSG_COM_VAL_013">ⓔ일자의 형식을 확인하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_014">ⓔ{0}</entry>
+    <entry key="MSG_COM_VAL_015">ⓔ해당일자는 존재하지 않습니다.</entry>
+    <entry key="MSG_COM_VAL_016">ⓔ시작일은 종료일보다 작거나 같아야 합니다.</entry>
+    <entry key="MSG_COM_VAL_017">ⓔ시작월은 종료월보다 작거나 같아야 합니다.</entry>
+    <entry key="MSG_COM_VAL_018">ⓔ조회 대상 기간은 최대 {0}일입니다.</entry>
+    <entry key="MSG_COM_VAL_019">ⓔ{0}가(이) 유효하지 않습니다.</entry>
+    <entry key="MSG_COM_VAL_020">ⓔ변경사항이 없습니다.</entry>
+    <entry key="MSG_COM_VAL_021">ⓔ{0}을(를) {0}로 입력하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_022">ⓔ시간은  0 ~ 23시로 입력하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_023">ⓔ분은 0 ~ 59 로 입력하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_024">ⓔ새로운 버전의 소프트웨어가 확인되었습니다. 시스템을 종료한 후 다시 실행하시기 바랍니다.</entry>
+	<entry key="MSG_COM_VAL_025">ⓔ초는 0 ~ 59 로 입력하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_026">ⓔ권한 그룹에 변경 사항이 있습니다. 권한그룹 변경 사항을 저장 한 후 다시 실행하시기 바랍니다.</entry>
+	<entry key="MSG_COM_VAL_027">ⓔ권한별  프로그램에 변경 사항이 있습니다. 선택 하신 권한별 프로그램을 저장 한 후 다시 실행하시기 바랍니다.</entry>
+    <entry key="MSG_COM_VAL_028">ⓔ음수값은 입력할 수 없습니다.</entry>
+    <entry key="MSG_COM_VAL_029">ⓔ동일한 {0}이(가) 존재합니다.</entry>
+    <entry key="MSG_COM_VAL_030">ⓔ사용자ID 또는 사용자 명 항목의 최소 길이는 2자리 이상입니다.</entry>
+    <entry key="MSG_COM_VAL_031">ⓔ업로드할 파일을 추가/갱신해 주시기 바랍니다.</entry>
+    <entry key="MSG_COM_VAL_032">ⓔ파일 추가/갱신 이후에는 파일업로드를 먼저 수행하셔야 합니다.</entry>
+    <entry key="MSG_COM_VAL_033">ⓔ다른 곳에서 사용자가 로그인 하였습니다.강제 종료 됩니다.</entry>
+    <entry key="MSG_COM_VAL_034">ⓔ올바른 이메일 주소를 입력하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_035">ⓔ{0}byte 이하로 입력하여 주십시오.</entry>
+    <entry key="MSG_COM_VAL_036">ⓔvar속성의 내용을 작성해 주십시오.</entry>
+    <entry key="MSG_COM_VAL_037">ⓔ지원하지 않는 outType 입니다.</entry>
+    <entry key="MSG_COM_VAL_038">ⓔ숫자만 입력하실 수 있습니다.</entry>
+    <entry key="MSG_COM_VAL_039">ⓔ영문자만 입력하실 수 있습니다.</entry>
+    <entry key="MSG_COM_VAL_040">ⓔ영문자 혹은 숫자만 입력하실 수 있습니다.</entry>
+    <entry key="MSG_COM_VAL_041">ⓔ입력할 수 있는 최대 길이를 초과하였습니다.</entry>
+    <entry key="MSG_COM_VAL_042">ⓔ{0}글자 이상 입력해 주십시오.</entry>
+    <entry key="MSG_COM_VAL_043">ⓔ삭제할 대상이 없습니다.</entry>
+	<entry key="MSG_COM_VAL_044">ⓔ선택한 그룹코드가 존재하지 않습니다. 그룹코드를 더블클릭하세요.</entry>
+	<entry key="MSG_COM_VAL_045">ⓔ신규행만 삭제가 가능합니다.</entry>
+	<entry key="MSG_COM_VAL_046">ⓔ시스템에서 부여된 기본 권한은 삭제가 불가능 합니다.</entry>
+	<entry key="MSG_COM_VAL_047">ⓔ사용자ID 또는 사용자명을 입력하세요.</entry>
+	<entry key="MSG_COM_VAL_048">ⓔ정의되지 않은 메세지 입니다.</entry>
+	<entry key="MSG_COM_VAL_049">ⓔ거래처 변경후 처리할 Function을 기술하세요!</entry>
+	<entry key="MSG_COM_VAL_050">ⓔ첨부파일의 갯수는 3개까지만 가능합니다.</entry>
+	<entry key="MSG_COM_VAL_051">ⓔ검색조건이 변경되었습니다.&#10;변경된 조건으로 조회 후 실행해주십시오.</entry>
+	<entry key="MSG_COM_VAL_052">ⓔ올바른 서비스 레벨을 선택해 주십시오.</entry>
+	<entry key="MSG_COM_VAL_053">ⓔ전화번호의 형식을 확인하여 주십시오.</entry>
+	<entry key="MSG_COM_VAL_054">ⓔ유효날짜를 벗어났습니다.</entry>
+
+
+    <!-- 확인 메세지 -->
+    <entry key="MSG_COM_CFM_001">ⓔ삭제하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_002">ⓔ수정하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_003">ⓔ저장하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_004">ⓔ선택한 파일을 업로드 하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_005">ⓔ저장되지 않은 정보(파일)가 있습니다. 이동하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_006">ⓔ변경사항을 초기화하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_007">ⓔ{0} 다시 시도할까요?</entry>
+    <entry key="MSG_COM_CFM_008">ⓔ이미 열린화면이 있습니다. 기존화면으로 이동하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_009">ⓔ변경사항이 있습니다. 계속 진행하시겠습니까?</entry>
+    <entry key="MSG_COM_CFM_010">ⓔ세션유효시간 {0}시간 이 경과하였습니다.자동 로그아웃 처리 합니다.</entry>
+    <entry key="MSG_COM_CFM_011">ⓔ변경사항이 있습니다. 저장 후 처리하십시요.</entry>
+    <entry key="MSG_COM_CFM_012">ⓔ저장되지 않은 파일 정보입니다. 저장 후 처리하십시요.</entry>
+    <entry key="MSG_COM_CFM_013">ⓔ작업중입니다.</entry>
+    <entry key="MSG_COM_CFM_014">ⓔ나만의 메뉴에서 삭제하시겠습니까?</entry>
+
+
+    <!--
+    **************************************************
+    * 업무 메세지 정의
+    *
+    * MSG_{APPGROUP}_{TYPE}_{SEQ}
+    *   - APPGROUP : 어플리케이션 그룹.
+    *   - TYPE : 메세지 타입(SUC : 성공, ERR : 에러/실패, VAL : 유효성검사, CFM : 확인메세지)
+    *   - SEQ : 일련번호
+    **************************************************
+    -->
+    <!-- 공통 로그인 -->
+    <entry key="MSG_LGN_VAL_001">ⓔ아이디를 입력하세요.</entry>
+    <entry key="MSG_LGN_VAL_002">ⓔ비밀번호를 입력하세요.</entry>
+    <entry key="MSG_LGN_ERR_001">ⓔ인증 데이터가 잘못되었습니다.</entry>
+    <entry key="MSG_LGN_ERR_002">ⓔ사용자 정보를 찾을 수 없습니다.</entry>
+    <entry key="MSG_LGN_ERR_010">ⓔ아이디 또는 비밀번호가 바르지 않습니다.</entry>
+    <entry key="MSG_LGN_ERR_020">ⓔ마지막 로그인 후 90일이 초과하였습니다. 관리팀으로 문의하시기 바랍니다.</entry>
+    <entry key="MSG_LGN_ERR_030">ⓔ최초 접속시 반드시 비밀번호를 변경하여야 합니다. 비밀번호 변경 화면으로 이동합니다.</entry>
+    <entry key="MSG_LGN_ERR_040">ⓔ비밀번호 사용 기간이 만료되었습니다. 비밀번호 변경 화면으로 이동합니다.</entry>
+    <entry key="MSG_LGN_ERR_050">ⓔ비밀번호 오류 횟수를 초과하였습니다. 관리팀으로 문의하시기 바랍니다.</entry>
+    <entry key="MSG_LGN_ERR_060">ⓔ임시 비밀번호로 로그인하였습니다. 비밀번호 변경 화면으로 이동합니다.</entry>
+    <entry key="MSG_LGN_ERR_070">ⓔ비밀번호 오류 횟수를 초과하였습니다.&#10;해당 계정이 잠금처리되었습니다.</entry>
+    <entry key="MSG_LGN_ERR_080">ⓔ잠긴 계정입니다.&#10;관리팀으로 문의하시기 바랍니다.</entry>
+    <entry key="MSG_LGN_ERR_090">ⓔ비밀번호 초기화 상태입니다.&#10;비밀번호 변경화면으로 이동합니다.</entry>
+    <entry key="MSG_LGN_ERR_100">ⓔ허용 가능한 네트워크 접속 IP 가 아닙니다.</entry>
+	<entry key="MSG_LGN_ERR_110">ⓔ서버와 연결되지 않았습니다.</entry>
+    <entry key="MSG_LGN_ERR_120">ⓔ해당 사용자 정보를 조회할 수 없습니다.</entry>
+    <entry key="MSG_LGN_ERR_130">ⓔ로컬 개발환경용 인증 정보가 입력되었는지 확인하시기 바랍니다. 인증 정보 변경 화면으로 이동하시겠습니까?</entry>
+    <entry key="MSG_LGN_ERR_140">ⓔ비밀번호가 저장되었습니다. 로그인 화면으로 이동합니다.</entry>
+    <entry key="MSG_LGN_ERR_150">ⓔ비밀번호가 저장되었습니다. </entry>
+    <entry key="MSG_LGN_ERR_160">ⓔ비밀번호를 변경하지 못하였습니다. 관리팀으로 문의하시기 바랍니다. </entry>
+    <entry key="MSG_LGN_ERR_170">ⓔ최근에 사용한 비밀번호는 사용할 수 없습니다.</entry>
+    <entry key="MSG_LGN_ERR_180">ⓔ비밀번호는 하루에 1회만 변경할 수 있습니다.</entry>
+    <entry key="MSG_LGN_ERR_190">ⓔ현재 비밀번호가 일치하지 않습니다.</entry>
+    <entry key="MSG_LGN_ERR_200">ⓔ현재 비밀번호를 입력하세요.</entry>
+    <entry key="MSG_LGN_ERR_210">ⓔ새로운 비밀번호를 입력하세요.</entry>
+    <entry key="MSG_LGN_ERR_220">ⓔ확인 비밀번호를 입력하세요.</entry>
+    <entry key="MSG_LGN_ERR_230">ⓔ새로운 비밀번호와 확인 비밀번호가 일치하지 않습니다.</entry>
+
+
+    <!-- Sample error message Sample -->
+    <entry key="MSG_COM_ERR_998">ⓔ사원정보 저장중에 오류가 발생하였습니다.</entry>
+
+    <!-- MAIN -->
+    <entry key="MSG_MAIN_VAL_001">ⓔ등록된 메뉴입니다.</entry>
+    <entry key="MSG_MAIN_VAL_002">ⓔ상위 메뉴이거나, URL이 없는 메뉴입니다.</entry>
+    <entry key="MSG_MAIN_VAL_003">ⓔ이미 등록된 바로가기 메뉴입니다.</entry>
+    <entry key="MSG_MAIN_VAL_004">ⓔ바로가기 메뉴를 삭제 하시겠습니까?</entry>
+    <entry key="MSG_MAIN_VAL_005">ⓔ등록된 하위 메뉴가 없습니다.</entry>
+
+    <!-- 엑셀 파읽 읽기 유효성검사용 -->
+    <entry key="MSG_EXL_VAL_001">ⓔline {0} : {1} 항목은 필수입력값 입니다.</entry>
+    <entry key="MSG_EXL_VAL_002">ⓔline {0} : {1} 항목은 {2}자 이상 입력하셔야 합니다.</entry>
+    <entry key="MSG_COM_VAL_101">ⓔ데이터 처리 중 유효성 검사가 실패하였습니다.&#10;아래 내용을 확인하시기 바랍니다.&#10;&#10;{0}</entry>
+
+    <!-- 버전체크용 메세지 -->
+    <entry key="MSG_VER_VAL_001">ⓔ프로그램 버전이 변경되었습니다.&#10;프로그램을 처음부터 다시 실행하여 주십시오.</entry>
+
+    <!-- 차단 서비스 목록에 등록된 서비스를 호출했을 경우, {0}은 서비스메소드의 FQN이다. -->
+    <entry key="MSG_BLC_VAL_001">ⓔ해당 기능을 일시적으로 사용할 수 없습니다.&#10;&#10;({0})&#10;&#10;잠시 후 다시 시도하시거나, 관리자에게 문의하여 주시기 바랍니다.</entry>
+
+    <!-- SMS 메세지 -->
+    <entry key="MSG_SMS_001">ⓔ안녕하십니까. {0}님, 오늘의 날씨는 {1} 입니다.</entry>
+    <entry key="MSG_MMS_001">ⓔ출연 : {0}, 제목 : {1}</entry>
+    <entry key="EDU_SUC_001">ⓔ{0} 자료가 저장되었습니다.</entry>
+
+    <!-- ENI 메세지 -->
+	<entry key="MSG_ENI_ERR_001">ⓔeniServiceList에 등록되지 않은 서비스입니다.</entry>
+
+	<!-- APC (Adaptive Performance Control) 관련 메세지 -->
+    <entry key="MSG_APC_ERR_001">ⓔAPC agent의 접속상태를 확인해 주십시오.&#10;(WAS:{0}, Agent:{1})</entry>
+    <entry key="MSG_APC_ERR_002">ⓔAPC agent의 접속상태가 정상으로 복구되었습니다.&#10;(WAS:{0}, Agent:{1})</entry>
+    <entry key="MSG_APC_CFM_001">ⓔAPC priority가 {0}에서 {1}(으)로 변경되었습니다.&#10;(ip:{2}, hostname:{3})</entry>
+    <entry key="MSG_APC_VAL_001">ⓔ해당 기능을 일시적으로 사용할 수 없습니다.&#10;&#10;({0})&#10;&#10;잠시 후 다시 시도하시거나, 관리자에게 문의하여 주시기 바랍니다. (APC)</entry>
+
+    <!-- 대시보드 메세지 -->
+    <entry key="MSG_DSH_VAL_001">ⓔ호출시간을 입력해 주십시오.</entry>
+    <entry key="MSG_DSH_VAL_002">ⓔ실행일자를 입력해 주십시오.</entry>
+    <entry key="MSG_DSH_VAL_003">ⓔ시작일자와 종료일자는 동일한 일자로 선택해야 합니다.</entry>
+
+    <!-- 배치스케쥴러 메세지 -->
+    <entry key="MSG_BAT_VAL_001">ⓔ기간은 From ~ To 형식으로 등록해 주십시오.</entry>
+    <entry key="MSG_BAT_VAL_002">ⓔline {0} : {1} 항목은 {2}자 이하로 입력하셔야 합니다.</entry>
+    <entry key="MSG_BAT_VAL_003">ⓔ실행그룹 내 Job 간의 선/후행관계는 존재하지 않아야 합니다.</entry>
+    <entry key="MSG_BAT_VAL_004">ⓔ실행그룹에 포함되지 않은 Job은 최소 1개 이상의 선/후행 조건이 존재해야 합니다.</entry>
+    <entry key="MSG_BAT_VAL_005">ⓔ1개의 그룹에 동일한 Job이 존재할 수 없습니다.</entry>
+    <entry key="MSG_BAT_VAL_006">ⓔ최소 1개의 그룹과 1개의 실행그룹을 구성해 주십시오.</entry>
+    <entry key="MSG_BAT_VAL_007">ⓔ그룹명을 입력해주세요.</entry>
+    <entry key="MSG_BAT_ERR_001">ⓔ엑셀파일이 존재하지 않습니다.</entry>
+    <entry key="MSG_BAT_ERR_002">ⓔ{0} Sheet 가 존재하지 않습니다.</entry>
+    <entry key="MSG_BAT_ERR_003">ⓔ동일한 그룹명이 존재합니다.</entry>
+    <entry key="MSG_BAT_ERR_004">ⓔRetry 스케쥴러 호출에 실패했습니다. 스케줄러 상태를 확인해 주시기 바랍니다.</entry>
+    <entry key="MSG_BAT_ERR_004">ⓔ선행조건은 최대 10개까지 등록 가능합니다.</entry>
+
+
+	<!-- 모바일 푸시 메세지 -->
+    <entry key="MSG_MPS_ERR_001">ⓔ필요한 정보를 찾을 수 없습니다.</entry>
+    <entry key="MSG_MPS_ERR_002">ⓔ그룹을 선택해 주십시오.</entry>
+    <entry key="MSG_MPS_VAL_001">ⓔ메시지 ID는 필수입니다.</entry>
+    <entry key="MSG_MPS_VAL_002">ⓔ그룹에 포함되는 사용자를 최소 1명은 등록해 주십시오.</entry>
+    <entry key="MSG_MPS_VAL_003">ⓔAPP ID를 입력해 주십시오.</entry>
+    <entry key="MSG_MPS_VAL_004">ⓔAPI Key를 입력해 주십시오.</entry>
+    <entry key="MSG_MPS_VAL_005">ⓔ메시지 내용은 필수입니다.</entry>
+    <entry key="MSG_MPS_CFM_001">ⓔ선택한 사용자에게만 재전송합니다. 전송 하시겠습니까?</entry>
+    <entry key="MSG_MPS_CFM_002">ⓔ전송 실패 상태인 {0}건의 메시지를 모두 재전송합니다. 전송 하시겠습니까?</entry>
+    <entry key="MSG_MPS_CFM_003">ⓔ전송 불가 상태인 {0}건의 메시지를 모두 재전송합니다. 전송 하시겠습니까?</entry>
+    <entry key="MSG_MPS_SUC_001">ⓔ재전송이 완료되었습니다.</entry>
+
+    <!-- 웹 서비스 -->
+	<entry key="MSG_WS_VAL_001">ⓔ동일한 리소스 경로가 존재합니다.</entry>
+</properties>

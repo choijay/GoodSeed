@@ -1,0 +1,738 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="rights">
+     <select id="getAuthorityGroupSearchForUserList" resultType="HMap">
+        SELECT  /* [rightsService.sqlx][rights.getAuthorityGroupSearchForUserList][사용자별 권한 조회][김병욱] [2012.02.06] */ 
+		        A."SYSTEM_CL",
+		        B."CD_NM",
+		        A."PROG_CD",
+		        A."PROG_NM",
+                COALESCE(CAST(C."SEARCH_YN" AS TEXT),'0')  AS "SEARCH_YN",
+	            COALESCE(CAST(C."NEW_YN" AS TEXT),'0')     AS "NEW_YN",
+	            COALESCE(CAST(C."DELETE_YN" AS TEXT),'0')  AS "DELETE_YN",
+	            COALESCE(CAST(C."DELETE_YN" AS TEXT),'0')  AS "SAVE_YN",
+	            COALESCE(CAST(C."PRINT_YN" AS TEXT),'0')   AS "PRINT_YN",
+	            COALESCE(CAST(C."BTN1_YN" AS TEXT),'0')    AS "BTN1_YN",
+	            COALESCE(CAST(C."BTN2_YN" AS TEXT),'0')    AS "BTN2_YN",
+	            COALESCE(CAST(C."BTN3_YN" AS TEXT),'0')    AS "BTN3_YN",
+	            COALESCE(CAST(C."BTN4_YN" AS TEXT),'0')    AS "BTN4_YN",
+	            COALESCE(CAST(C."BTN5_YN" AS TEXT),'0')    AS "BTN5_YN",
+	            COALESCE(CAST(C."BTN6_YN" AS TEXT),'0')    AS "BTN6_YN",
+	            COALESCE(CAST(C."BTN7_YN" AS TEXT),'0')    AS "BTN7_YN",
+	            COALESCE(CAST(C."BTN8_YN" AS TEXT),'0')    AS "BTN8_YN",
+	            COALESCE(CAST(C."BTN9_YN" AS TEXT),'0')    AS "BTN9_YN",
+	            COALESCE(CAST(C."BTN10_YN" AS TEXT),'0')   AS "BTN10_YN",
+	            A."BTN1_NM",
+	            A."BTN2_NM",
+	            A."BTN3_NM",
+	            A."BTN4_NM",
+	            A."BTN5_NM",
+	            A."BTN6_NM",
+	            A."BTN7_NM",
+	            A."BTN8_NM",
+	            A."BTN9_NM",
+	            A."BTN10_NM"
+         FROM  "SYS_PROGRAM" A
+		     join (  
+		           SELECT  "COMM_CD"    AS "SYSTEM_CL",
+		                   "COMM_CD_NM" AS "CD_NM",
+		                   "LNUP_ORD" 
+		             FROM  "SYS_CODE" 
+		            WHERE  "COMM_CL_CD" = 'GS001'  
+		              AND  "USE_YN"     = '1'
+		        ) B ON A."SYSTEM_CL" = B."SYSTEM_CL"
+	         LEFT OUTER JOIN (
+	            SELECT  A."PROG_CD",
+			            MAX(A."SEARCH_YN") AS "SEARCH_YN",
+			            MAX(A."NEW_YN")    AS "NEW_YN",
+			            MAX(A."DELETE_YN") AS "DELETE_YN",
+			            MAX(A."SAVE_YN")   AS "SAVE_YN",
+			            MAX(A."PRINT_YN")  AS "PRINT_YN",
+			            MAX(A."BTN1_YN")   AS "BTN1_YN",
+			            MAX(A."BTN2_YN")   AS "BTN2_YN",
+			            MAX(A."BTN3_YN")   AS "BTN3_YN",
+			            MAX(A."BTN4_YN")   AS "BTN4_YN",
+			            MAX(A."BTN5_YN")   AS "BTN5_YN",
+			            MAX(A."BTN6_YN")   AS "BTN6_YN",
+			            MAX(A."BTN7_YN")   AS "BTN7_YN",
+			            MAX(A."BTN8_YN")   AS "BTN8_YN",
+			            MAX(A."BTN9_YN")   AS "BTN9_YN",
+			            MAX(A."BTN10_YN")  AS "BTN10_YN"
+	            FROM  "SYS_AUTH_PROG" A
+	                JOIN (
+	                   SELECT  A."AUTH_CD" 
+	                     FROM  "SYS_AUTHORITY" A JOIN "SYS_AUTH_USER" B ON A."AUTH_CD" = B."AUTH_CD"
+	                    WHERE  A."USE_YN"  = '1'
+	                      AND  B."USER_ID" = #{USER_ID}
+	                  ) B ON A."AUTH_CD" = B."AUTH_CD"
+	           WHERE A."USE_YN"  = '1' 
+	           GROUP BY A."PROG_CD" 
+	          ) C ON A."PROG_CD"   = C."PROG_CD"        
+        <!-- 그리드 sorting -->
+		<if test='sidx != null and sidx !=""'>  						    
+			ORDER BY 
+			<if test='sidx == &quot;CD_NM&quot;'>B."CD_NM"</if>
+			<if test='sidx == &quot;PROG_CD&quot;'>A."PROG_CD"</if>
+			<if test='sidx == &quot;PROG_NM&quot;'>A."PROG_NM"</if>
+		 	
+				<if test='sord == &quot;asc&quot;'>ASC</if>
+		 		<if test='sord == &quot;desc&quot;'>DESC</if>
+	 	</if>	  					    						    
+		<!--// 그리드 sorting -->
+		<if test='sidx == null and sidx ==""'>
+			ORDER BY B."LNUP_ORD", A."PROG_NO"
+		</if>
+    </select>    
+    <select id="getAuthorityGroupList" resultType="HMap">
+		SELECT  /* [rightsService.sqlx][rights.getAuthorityGroupList][권한그룹 조회][김병욱][2012.02.06] */	
+			    PAGING_T2.*
+       	  FROM  (
+	       		     SELECT  PAGING_T1.*
+					       , ROW_NUMBER() OVER ( ORDER BY PAGING_T1."AUTH_CD" ASC ) AS "ROWCNT"
+					  FROM (
+						 	SELECT  "AUTH_CD", 
+									"AUTH_NM", 
+									"AUTH_CL",
+									"SYSTEM_CL",
+									"USE_YN",
+									<!-- 그리드 sorting -->
+									<if test="sidx != null">						    
+										ROW_NUMBER() OVER ( ORDER BY 
+										<if test="sidx == &quot;AUTH_CD&quot;">"AUTH_CD"</if>
+										<if test="sidx == &quot;AUTH_NM&quot;">"AUTH_NM"</if>					 	
+										<if test="sord == &quot;asc&quot;">ASC</if>
+					 					<if test="sord == &quot;desc&quot;">DESC</if>
+									 	) AS "ROWNUM"
+								  	</if>		    						    
+									<!--// 그리드 sorting -->
+									<if test="sidx == null">
+										ROW_NUMBER() OVER (ORDER BY "AUTH_CD" ASC) AS "ROWNUM"
+									</if>
+							  FROM  "SYS_AUTHORITY"
+							 WHERE  "AUTH_CL"   = #{AUTH_CL}
+							   AND  "SYSTEM_CL" = #{SYSTEM_CL}
+				            ) PAGING_T1
+			         WHERE  PAGING_T1."ROWNUM" <![CDATA[<=]]>  CAST(#{END_ROW} AS NUMERIC)		         
+					
+	            ) PAGING_T2
+	 WHERE PAGING_T2."ROWCNT" <![CDATA[>=]]>CAST(#{START_ROW}AS NUMERIC)		
+	</select>
+	
+    <select id="getAuthorityGroupListTotalCount" resultType="int">
+        SELECT  /* [rightsService.sqlx][rights.getAuthorityGroupListTotalCount][권한그룹 조회 총 카운터][김병욱][2012.02.06] */	
+                COUNT(1) 
+		FROM	"SYS_AUTHORITY"
+		WHERE  	"AUTH_CL"   = #{AUTH_CL}
+		AND  	"SYSTEM_CL" = #{SYSTEM_CL}
+    </select>    
+    <select id="getAuthorityDtlList" resultType="HMap">
+        SELECT  /* [rightsService.sqlx][rights.getAuthorityDtlList][권한그룹별 프로그램 조회][김병욱] [2012.02.06] */
+                A."PROG_CD",
+                A."PROG_NM",
+                A."PROG_LVL",
+                A."SYSTEM_CL",
+                A."PROG_NO", 
+                #{AUTH_CD}            AS "AUTH_CD",
+                COALESCE(CAST(B."SEARCH_YN" AS TEXT),'0') AS "SELBTN_USE_YN",
+                COALESCE(CAST(B."NEW_YN" AS TEXT),'0')    AS "NEWBTN_USE_YN",
+                COALESCE(CAST(B."DELETE_YN" AS TEXT),'0') AS "DELBTN_USE_YN",
+                COALESCE(CAST(B."SAVE_YN" AS TEXT),'0')     AS "SAVBTN_USE_YN",
+                COALESCE(CAST(B."PRINT_YN" AS TEXT),'0')  AS "PRTBTN_USE_YN",
+                COALESCE(CAST(B."BTN1_YN" AS TEXT),'0')   AS "BTN1_USE_YN",
+                COALESCE(CAST(B."BTN2_YN" AS TEXT),'0')   AS "BTN2_USE_YN",
+                COALESCE(CAST(B."BTN3_YN" AS TEXT),'0')   AS "BTN3_USE_YN",
+                COALESCE(CAST(B."BTN4_YN" AS TEXT),'0')   AS "BTN4_USE_YN",
+                COALESCE(CAST(B."BTN5_YN" AS TEXT),'0')   AS "BTN5_USE_YN",
+                COALESCE(CAST(B."BTN6_YN" AS TEXT),'0')   AS "BTN6_USE_YN",
+                COALESCE(CAST(B."BTN7_YN" AS TEXT),'0')   AS "BTN7_USE_YN",
+                COALESCE(CAST(B."BTN8_YN" AS TEXT),'0')   AS "BTN8_USE_YN",
+                COALESCE(CAST(B."BTN9_YN" AS TEXT),'0')   AS "BTN9_USE_YN",
+                COALESCE(CAST(B."BTN10_YN" AS TEXT),'0')  AS "BTN10_USE_YN",
+                COALESCE(CAST(B."USE_YN" AS TEXT),'0')    AS "USE_YN",
+	            A."BTN1_NM",
+	            A."BTN2_NM",
+	            A."BTN3_NM",
+	            A."BTN4_NM",
+	            A."BTN5_NM",
+	            A."BTN6_NM",
+	            A."BTN7_NM",
+	            A."BTN8_NM",
+	            A."BTN9_NM",
+	            A."BTN10_NM"
+		FROM  	"SYS_PROGRAM"   A LEFT OUTER JOIN 
+      			"SYS_AUTH_PROG" B ON B."PROG_CD" = A."PROG_CD" AND B."AUTH_CD" = #{AUTH_CD} 
+	  	WHERE 	A."SYSTEM_CL"  = #{SYSTEM_CL}
+		ORDER BY "PROG_NO" ASC
+    </select>    
+    <delete id="deleteAuthorityUser">
+        DELETE /* [rightsService.sqlx][rights.deleteAuthorityUser][권한그룹별 사용자 삭제][김병욱][2012.02.06]  */
+        FROM "SYS_AUTH_USER" 
+        WHERE	"AUTH_CD" = #{AUTH_CD}
+		AND 	"USER_ID" = #{USER_ID}
+    </delete>    
+	<delete id="deleteAuthorityDtl">
+        DELETE  /* [rightsService.sqlx][rights.deleteAuthorityDtl][김병욱][권한그룹별 프로그램 삭제][김병욱][2012.02.06] */
+         FROM       "SYS_AUTH_PROG"
+		WHERE "AUTH_CD" = #{AUTH_CD}
+        <if test="PROG_CD != null">	
+        AND "PROG_CD" = #{PROG_CD}
+        </if>
+     </delete>
+     <insert id="insertAuthorityUser">	
+        INSERT /* [rightsService.sqlx][rights.insertAuthorityUser][권한그룹별 사용자 등록][김병욱][2012.02.06]  */
+		INTO "SYS_AUTH_USER"
+        (
+            "AUTH_CD",
+            "USER_ID",
+            "REG_ID",
+            "REG_DTM",
+            "UPD_ID",
+            "UPD_DTM"
+        )
+        VALUES
+        (
+            #{AUTH_CD},
+            #{USER_ID},
+            #{g_userId},
+            NOW(),
+            #{g_userId},
+            NOW()
+        )
+    </insert>
+    <!-- 그룹권한 다국어 자동생성 -->
+	<insert id="insertAutoMultilingualAuthority"> 
+		INSERT 	/*[rightsService.sqlx][rights.insertAutoMultilingualAuthority][그룹권한 다국어 자동생성][강정현][2013.04.30]*/  
+		INTO  "SYS_AUTHORITY_LANGUAGE" (
+		  		  "AUTH_CD"
+              	, "AUTH_NM"
+			  	, "AUTH_CL"
+			  	, "SYSTEM_CL"
+			  	, "LANG_CL"
+			  	, "REG_ID"
+				, "REG_DTM"
+				, "UPD_ID"
+				, "UPD_DTM"
+		)
+		SELECT	#{AUTH_CD}							/* 권한그룹코드 */
+			  	, #{AUTH_NM}							/* 다국어 권한그룹명 */
+			  	, #{AUTH_CL}							/* 권한그룹구분 */
+			  	, #{SYSTEM_CL} 						/* 시스템구분 */   
+              	, #{LANG_CL}						/* 언어구분 */
+              	, #{g_userId}
+              	, NOW()
+              	, #{g_userId}
+              	, NOW()
+		FROM	"SYS_CODE"
+		WHERE	"COMM_CL_CD" = 'GS008'
+	</insert>	
+	<update id="updateAuthority">
+        UPDATE  /* [rightsService.sqlx][rights.updateAuthority][권한그룹 수정][김병욱][2012.02.06]  */
+                "SYS_AUTHORITY" 
+		SET		"AUTH_NM" 	= #{AUTH_NM}
+              , "USE_YN"  	= #{USE_YN}
+              , "UPD_ID"  	= #{g_userId}
+              , "UPD_DTM"  	= NOW()
+		WHERE  	"AUTH_CD" 	= #{AUTH_CD}
+     </update>     
+     <insert id="insertAuthorityDtl">	
+        INSERT  /*[rightsService.sqlx][rights.insertAuthorityDtl][권한그룹별 프로그램 등록][김병욱][2012.02.06]  */
+		INTO  "SYS_AUTH_PROG"
+        (
+            "AUTH_CD",
+            "PROG_CD",
+            "SEARCH_YN",
+            "NEW_YN",
+            "DELETE_YN",
+            "SAVE_YN",
+            "PRINT_YN",
+            "BTN1_YN",
+            "BTN2_YN",
+            "BTN3_YN",
+            "BTN4_YN",
+            "BTN5_YN",
+            "BTN6_YN",
+            "BTN7_YN",
+            "BTN8_YN",
+            "BTN9_YN",
+            "BTN10_YN",
+            "USE_YN",
+            "REG_ID",
+			"REG_DTM",
+			"UPD_ID",
+			"UPD_DTM"
+        )
+        VALUES
+        (
+            #{AUTH_CD},
+            #{PROG_CD},
+            #{SELBTN_USE_YN},
+            #{NEWBTN_USE_YN},
+            #{DELBTN_USE_YN},
+            #{SAVBTN_USE_YN},
+            #{PRTBTN_USE_YN},
+            #{BTN1_USE_YN},
+            #{BTN2_USE_YN},
+            #{BTN3_USE_YN},
+            #{BTN4_USE_YN},
+            #{BTN5_USE_YN},
+            #{BTN6_USE_YN},
+            #{BTN7_USE_YN},
+            #{BTN8_USE_YN},
+            #{BTN9_USE_YN},
+            #{BTN10_USE_YN},
+            #{USE_YN},
+            #{g_userId},
+            NOW(),
+            #{g_userId},
+            NOW()
+        )
+    </insert>
+	<select id="getAuthorityUserDtlList" resultType="HMap">
+      SELECT  /* [rightsService.sqlx][rights.getAuthorityUserDtlList][권한그룹별 사용자 조회][김병욱] [2012.02.06] */
+              AA.*,  
+              #{AUTH_CD}  AS "AUTH_CD",
+              (CASE WHEN "AUTH_CD" IS NULL THEN '0' ELSE '1' END) "USE_YN"
+        FROM (
+                  SELECT  
+				    A."USER_NM",
+				    A."USER_ID"
+				  FROM  "SYS_USER" A 
+				 WHERE  A."USE_YN"  = '1'
+              )AA LEFT OUTER JOIN
+              (SELECT * FROM "SYS_AUTH_USER" WHERE "AUTH_CD"=#{AUTH_CD} ) BB ON AA."USER_ID" = BB."USER_ID"
+		<!-- 그리드 sorting -->
+		<if test="sidx != null">  						    
+			ORDER BY 
+			<if test="sidx == &quot;USER_NM&quot;">"USER_NM"</if>
+			<if test="sidx == &quot;USER_ID&quot;">AA."USER_ID"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>				    						    
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY "USER_NM" ASC
+		</if>     
+    </select>  
+    <select id="getAllowIpList" resultType="HMap">
+		SELECT  /* [rightsService.sqlx][rights.getAllowIpList][사용자접근권한관리][김병욱][2012.02.17] */ 
+		  		A."USER_ID",
+		  		A."USER_ID"  AS "USER_ID_KEY",
+		  		B."USER_NM",
+		  		A."ALLOW_IP",
+		  		A."ALLOW_IP" AS "ALLOW_IP_KEY",
+		  		A."REG_ID",
+		  		C."USER_NM"  AS "REG_NM",
+		  		TO_CHAR(A."REG_DTM",'YYYYMMDD') AS "REG_DTM"
+		FROM  	"SYS_ALLOW_IP" A LEFT OUTER JOIN "SYS_USER" B ON A."USER_ID" = B."USER_ID"
+		 		LEFT OUTER JOIN "SYS_USER" C ON A."REG_ID"  = C."USER_ID" LEFT OUTER JOIN "SYS_EMP" D ON B."COM_CD"  = D."COM_CD" AND B."EMP_NO"  = D."EMP_NO"
+		WHERE 	1=1
+       <if test='USER_ID != null and USER_ID !=""'>        
+                AND A."USER_ID" LIKE  '%' || #{USER_ID}||'%'            
+        </if>
+        <if test='USER_NM != null and USER_NM !=""'>            
+                AND B."USER_NM" LIKE  '%' || #{USER_NM}||'%'            
+        </if>
+        <if test='EMP_NO != null and EMP_NO !=""'>              
+                AND B."EMP_NO" LIKE  '%' || #{EMP_NO}||'%'            
+        </if>
+        <if test='DEPT_CD != null and DEPT_CD !=""'>          
+             AND D."DEPT_CD" LIKE '%' || #{DEPT_CD} ||'%'         
+        </if>        
+		<!-- 그리드 sorting -->
+		<if test='sidx != null and sidx !=""'> 						    
+			ORDER BY 
+			<if test='sidx == &quot;USER_ID&quot;'>A."USER_ID"</if>
+			<if test='sidx == &quot;USER_NM&quot;'>B."USER_NM"</if>
+		 	
+				<if test='sord == &quot;asc&quot;'>ASC</if>
+		 		<if test='sord == &quot;desc&quot;'>DESC</if>
+		</if>			    						    
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY A."REG_DTM" DESC
+		</if>   
+    </select>    
+    <delete id="deleteAllowIp">
+        DELETE  /* [rightsService.sqlx][rights.deleteAllowIp][사용자접근권한관리][김병욱][2012.02.17] */
+		FROM  	"SYS_ALLOW_IP"
+        WHERE  	"USER_ID"  = #{USER_ID_KEY}
+        AND  	"ALLOW_IP" = #{ALLOW_IP_KEY}
+     </delete>      
+     <select id="selectAllowIp" resultType="HMap">
+       	SELECT	/* [rightsService.sqlx][rights.selectAllowIp][사용자접근권한 중복체크][김병욱][2012.02.17] */
+       			"USER_ID" 
+       	From  	"SYS_ALLOW_IP"
+       	WHERE  	"USER_ID"  = #{USER_ID}
+       	AND  	"ALLOW_IP" = #{ALLOW_IP}
+     </select>   
+     <insert id="insertAllowIp">	
+		INSERT  /* [rightsService.sqlx][rights.insertAllowIp][사용자접근권한 등록][김병욱][2012.02.17] */
+		INTO  "SYS_ALLOW_IP"
+        (
+            "USER_ID",
+            "ALLOW_IP",
+            "REG_ID",
+            "REG_DTM"
+        )
+        VALUES
+        (
+              #{USER_ID}
+            , #{ALLOW_IP}
+            , #{g_userId}
+            , NOW()
+        )
+    </insert>
+    <update id="updateAllowIp">
+        UPDATE  /* [rightsService.sqlx][rights.updateAllowIp][사용자접근권한관리][김병욱][2012.02.17] */
+                "SYS_ALLOW_IP" 
+		SET 	"USER_ID"  = #{USER_ID},
+                "ALLOW_IP" = #{ALLOW_IP}
+        WHERE  	"USER_ID"  = #{USER_ID_KEY}
+		AND  	"ALLOW_IP" = #{ALLOW_IP_KEY}
+    </update>     
+    <!-- 사용자정보 조회 -->
+	<select id="getUserList" resultType="HMap">
+		SELECT  /* [rightsService.sqlx][rights.getUserList][사용자정보 조회][HHJ][2012.02.29] */
+		        "USER_ID"      
+              , "USER_NM"      
+		FROM  	"SYS_USER" A 
+	    WHERE  	"USE_YN"  = '1'
+	    AND   A."USER_ID"  LIKE '%' ||  #{USER_ID} || '%'
+	    AND   A."USER_NM"  like '%' ||  #{USER_NM} || '%' 
+	     	  
+		<!-- 그리드 sorting -->
+		<if test="sidx != null">  						    
+			ORDER BY 
+			<if test="sidx == &quot;USER_ID&quot;">"USER_ID"</if>
+			<if test="sidx == &quot;USER_NM&quot;">"USER_NM"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>				    						    
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY "USER_ID" ASC
+		</if>
+	</select>	
+	<!-- 사용자별부서권한 조회 -->
+	<select id="getUserDeptList" resultType="HMap">
+		SELECT  /* [rightsService.sqlx][rights.getUserDeptList][사용자별부서권한 조회][HHJ][2012.02.29] */
+		        A."USER_ID"      
+		      , A."SYSTEM_CL"      
+              , A."COM_CD"      
+              , A."DEPT_CD"    
+              , B."DEPT_NM" 
+              , A."USESTART_DT"
+              , A."USEEND_DT"
+              , A."USE_YN"
+	     FROM	"SYS_AUTH_USERDEPT" A LEFT JOIN "SYS_DEPT" B ON A."COM_CD" = B."COM_CD" AND A."DEPT_CD" = B."DEPT_CD" 
+	     WHERE  A."COM_CD"    = B."COM_CD" 
+	     AND  	A."DEPT_CD"   = B."DEPT_CD" 
+	     AND  	A."SYSTEM_CL" = #{SYSTEM_CL} 
+	     AND  	A."USER_ID"   = #{USER_ID} 
+	     <if test='COM_CD != null and COM_CD !=""'>     
+	       AND   A."COM_CD"   =  #{COM_CD}
+	       </if>
+	       <if test='DEPT_CD != null and DEPT_CD !=""'> 
+	       AND   A."DEPT_CD"  =  #{DEPT_CD}         	     
+		 AND    B."USE_YN"    = '1' 
+		 </if>	 	 
+	 	 <!-- 그리드 sorting -->
+		 <if test='sidx != null and sidx !=""'> 						    
+			ORDER BY 
+			<if test="sidx == &quot;COM_CD&quot;">A."COM_CD"</if>
+			<if test="sidx == &quot;DEPT_CD&quot;">A."DEPT_CD"</if>
+			<if test="sidx == &quot;DEPT_NM&quot;">B."DEPT_NM"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>					    
+		<!--// 그리드 sorting -->
+		<if test='sidx == null and sidx ==""'>
+			ORDER BY A."COM_CD", A."DEPT_CD"   ASC   
+		</if>	 	 
+	</select>	
+	
+	<!-- 사용자별부서권한 삭제 --> 
+	<delete id="deleteAuthUserdept">
+		DELETE  /*[rightsService.sqlx][rights.deleteAuthUserdept][사용자별부서권한 삭제][HHJ][2012.02.29]*/
+		FROM	"SYS_AUTH_USERDEPT" 
+         WHERE  "USER_ID"      = #{USER_ID}
+         AND  	"COM_CD"       = #{COM_CD}
+         AND  	"DEPT_CD"      = #{DEPT_CD}
+         AND  	"SYSTEM_CL"    = #{SYSTEM_CL}
+	</delete>	
+	<!-- 사용자별부서권한 등록 -->
+	<insert id="insertAuthUserdept"> 
+		INSERT  /*[rightsService.sqlx][rights.insertAuthUserdept][사용자별부서권한 등록][HHJ][2012.02.29]*/
+		INTO  "SYS_AUTH_USERDEPT"
+            (   "USER_ID"
+			  , "COM_CD"
+			  , "DEPT_CD"
+			  , "SYSTEM_CL"
+			  , "USESTART_DT"
+			  , "USEEND_DT"
+			  , "USE_YN"
+              , "REG_ID"       
+              , "REG_DTM"      
+              , "UPD_ID"       
+              , "UPD_DTM"     
+			 )
+	    VALUES
+			 (  #{USER_ID}
+			  , #{COM_CD}
+			  , #{DEPT_CD}
+			  , #{SYSTEM_CL}
+			  , #{USESTART_DT}
+			  , #{USEEND_DT}
+              , #{USE_YN}
+			  ,	#{g_userId}
+			  ,	NOW()
+			  ,	#{g_userId}
+			  ,	NOW()
+			 )
+	</insert>	
+	<!-- 사용자별부서권한 수정 -->
+	<update id="updateAuthUserdept">
+		UPDATE  /*[rightsService.sqlx][rights.updateAuthUserdept][사용자별부서권한 수정][HHJ][2012.02.29]*/
+		       	"SYS_AUTH_USERDEPT"            
+		   SET  "USESTART_DT"  = #{USESTART_DT}  
+			  , "USEEND_DT"    = #{USEEND_DT}  
+			  , "USE_YN"       = #{USE_YN} 
+	          ,	"UPD_ID"	     = #{g_userId} 
+	          ,	"UPD_DTM"      = NOW() 
+         WHERE  "USER_ID"      = #{USER_ID}
+           AND  "COM_CD"       = #{COM_CD}
+           AND  "DEPT_CD"      = #{DEPT_CD}
+           AND  "SYSTEM_CL"    = #{SYSTEM_CL}
+    </update> 
+    <!-- 프로그램정보 조회 -->
+	<select id="getProgList" resultType="HMap">
+		SELECT  /* [rightsService.sqlx][rights.getUserList][프로그램정보 조회][HHJ][2012.03.05] */
+		        "PROG_CD"      
+              , "PROG_NM" 
+              , "SYSTEM_CL"      
+		FROM  	"SYS_PROGRAM"
+		WHERE  	"USE_YN"    = '1'
+	    AND  	"SYSTEM_CL" = #{SYSTEM_CL}
+	    AND  	"PROG_LVL"  = '1'
+	  	ORDER BY  "PROG_CD" 
+	</select>	
+	<!-- 사용자 프로그램별 부서권한 조회 -->
+	<select id="getProgDeptList" resultType="HMap">
+		SELECT  /* [rightsService.sqlx][rights.getProgDeptList][사용자 프로그램별 부서권한 조회][HHJ][2012.03.05] */
+		        A."USER_ID"      
+		      , A."PROG_CD"      
+		      , A."SYSTEM_CL"     
+              , A."COM_CD"     
+              , A."DEPT_CD"    
+              , B."DEPT_NM" 
+              , A."USESTART_DT"
+              , A."USEEND_DT"
+              , A."USE_YN"  
+	     FROM  	"SYS_AUTH_PROGDEPT" A LEFT JOIN "SYS_DEPT" B ON  A."COM_CD" = B."COM_CD" AND A."DEPT_CD" = B."DEPT_CD"
+	     WHERE  A."USER_ID"   = #{USER_ID} 
+	     AND  	A."PROG_CD"   = #{PROG_CD}
+	     AND    B."USE_YN"    = '1' 
+	 	<!-- 그리드 sorting -->
+		<if test="sidx != null">  						    
+			ORDER BY 
+			<if test="sidx == &quot;COM_CD&quot;">A."COM_CD"</if>
+			<if test="sidx == &quot;DEPT_CD&quot;">A."DEPT_CD"</if>
+			<if test="sidx == &quot;DEPT_NM&quot;">B."DEPT_NM"</if>
+			<if test="sidx == &quot;PROG_CD&quot;">A."PROG_CD"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>				    						    
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY A."COM_CD", A."DEPT_CD"   ASC
+		</if> 	 	
+	</select>
+	<!-- 사용자 프로그램별 부서권한 삭제 --> 
+	<delete id="deleteAuthProgdept">
+		DELETE  /*[rightsService.sqlx][rights.deleteAuthProgdept][사용자 프로그램별 부서권한 삭제][HHJ][2012.03.05]*/
+		FROM	"SYS_AUTH_PROGDEPT"
+         WHERE  "USER_ID"      = #{USER_ID}
+           AND  "PROG_CD"     = #{PROG_CD}
+           AND  "COM_CD"       = #{COM_CD}
+           AND  "DEPT_CD"      = #{DEPT_CD}
+	</delete>
+	<!-- 사용자 프로그램별 부서권한 등록 -->
+	<insert id="insertAuthProgdept"> 
+		INSERT  /*[rightsService.sqlx][rights.insertAuthProgdept][사용자 프로그램별 부서권한 등록][HHJ][2012.03.05]*/
+		  INTO  "SYS_AUTH_PROGDEPT"
+            (   "USER_ID"
+			  , "PROG_CD"
+			  , "COM_CD"
+			  , "DEPT_CD"
+			  , "SYSTEM_CL"
+			  , "USESTART_DT"
+			  , "USEEND_DT"
+			  , "USE_YN"
+              , "REG_ID"       
+              , "REG_DTM"      
+              , "UPD_ID"       
+              , "UPD_DTM"      
+			 )
+	    VALUES
+			 (  #{USER_ID}
+			  , #{PROG_CD}
+			  , #{COM_CD}
+			  , #{DEPT_CD}
+			  , #{SYSTEM_CL}
+			  , #{USESTART_DT}
+			  , #{USEEND_DT}
+              , #{USE_YN} 
+			  ,	#{g_userId}
+			  ,	NOW()
+			  ,	#{g_userId}
+			  ,	NOW()
+			 )
+	</insert>
+	<!-- 사용자 프로그램별 부서권한 수정 -->
+	<update id="updateAuthProgdept">
+		UPDATE  /*[rightsService.sqlx][rights.updateAuthProgdept][사용자 프로그램별 부서권한 수정][HHJ][2012.03.05]*/
+		       	"SYS_AUTH_PROGDEPT"            
+		   SET  "USESTART_DT"  = #{USESTART_DT}  
+			  , "USEEND_DT"    = #{USEEND_DT}  
+			  , "USE_YN"       = #{USE_YN} 
+	          ,	"UPD_ID"	     = #{g_userId} 
+	          ,	"UPD_DTM"      = NOW() 
+         WHERE  "USER_ID"      = #{USER_ID}
+           AND  "PROG_CD"      = #{PROG_CD}
+           AND  "COM_CD"      = #{COM_CD}
+           AND  "DEPT_CD"      = #{DEPT_CD}
+    </update>    
+    <!-- 다국어 그룹권한 조회 (HTML용) -->
+	<select id="getHtmlAuthorityGroupMultilinguaList" resultType="HMap">
+		SELECT	/* [rightsService.sqlx][rights.getHtmlAuthorityGroupMultilinguaList][다국어 그룹권한 조회 (HTML용)][강정현][2013.05.6] */  
+				  A."SYSTEM_CL"
+    			, A."AUTH_CD"
+    			, A."AUTH_NM" 
+    			, A."AUTH_CL"
+    	<foreach collection="codeList" item="item" separator="," open=",">
+        		MAX(CASE B."LANG_CL" WHEN #{item} THEN b."AUTH_NM" ELSE '' END) AS ${item}
+       	</foreach>   
+  		  FROM	"SYS_AUTHORITY" A
+  		  JOIN 	"SYS_AUTHORITY_LANGUAGE" B
+    		ON 	(A."SYSTEM_CL" = B."SYSTEM_CL" AND A."AUTH_CD" = B."AUTH_CD")
+    		WHERE A."SYSTEM_CL" = #{SYSTEM_CL}
+ 		 GROUP	BY A."SYSTEM_CL", A."AUTH_CD", A."AUTH_NM", A."AUTH_CL"		
+		<!-- 그리드 sorting -->
+		<if test="sidx != null">  						    
+			ORDER BY 
+			<if test="sidx == &quot;AUTH_CD&quot;">A."AUTH_CD"</if>
+			<if test="sidx == &quot;AUTH_NM&quot;">A."AUTH_NM"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>				    						    
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY A."AUTH_CD" ASC
+		</if>
+	</select>	
+	<!-- 다국어 그룹권한 조회 (Miplatform 용) -->
+	<select id="getAuthorityGroupMultilinguaList" resultType="HMap">
+		SELECT	/* [rightsService.sqlx][rights.getAuthorityGroupMultilinguaList][다국어 그룹권한 조회 (Miplatform 용)][강정현][2013.04.16] */  
+				1 AS "SEQ"
+				, A."AUTH_CD"
+        		, A."DEF_VALUE" AS "DEF_VALUE"
+        		, A."AUTH_NM" AS "LANG_VALUE"
+        		, A."AUTH_CL"
+        		, A."LANG_CL"
+        		, B."COMM_CD_NM" AS "LANG_CL_NM"
+        		, A."SYSTEM_CL"        
+        		, B."LNUP_ORD"
+		  FROM	(
+		  			SELECT	T1.*
+		  					, T2."AUTH_NM" AS "DEF_VALUE"
+		  			  FROM	"SYS_AUTHORITY_LANGUAGE" T1
+		  			  JOIN 	"SYS_AUTHORITY" T2
+		  		  		ON 	T1."AUTH_CD" = T2."AUTH_CD"		  		   
+		  		     WHERE 	T1."SYSTEM_CL" = #{SYSTEM_CL}
+              	) A
+		  JOIN	(
+					SELECT	T1."COMM_CD"
+			   					,T1."COMM_CD_NM"
+			   					,T1."LNUP_ORD"             
+                      	  FROM	(
+                   					SELECT	BB."COMM_CD"
+											,BB."COMM_CD_NM"
+											,BB."LNUP_ORD"             
+                   					  FROM 	"SYS_CL_CODE" AA JOIN  "SYS_CODE" BB  ON AA."COMM_CL_CD" = BB."COMM_CL_CD"          
+                    				 WHERE	AA."COMM_CL_CD" = 'GS008'
+                    				   AND	AA."USE_YN" = '1'
+                    				   AND  BB."USE_YN" = '1'
+								) T1                            		   
+				) B
+		 	ON	A."LANG_CL" = B."COMM_CD" 
+		 ORDER 	BY B."LNUP_ORD"
+	</select>	
+	<!-- 그룹권한 다국어 등록/수정 -->
+	<insert id="insertAuthorityGroupMultilinguaList">
+		WITH UPSERT AS ( /*[rightsService.sqlx][rights.insertAuthorityGroupMultilinguaList][그룹권한 다국어 등록/수정][강정현][2013.04.16]*/  
+				UPDATE "SYS_AUTHORITY_LANGUAGE" A
+				SET    "AUTH_NM" = #{LANG_VALUE}
+    	 			  ,"UPD_ID"  = #{g_userId}
+    	 			  ,"UPD_DTM"  = NOW()
+    			WHERE "SYSTEM_CL" = #{SYSTEM_CL} 
+    			AND   "AUTH_CD" = #{AUTH_CD} 
+    			AND   "LANG_CL" = #{LANG_CL}
+				RETURNING A.*)
+    	 		
+    			INSERT INTO "SYS_AUTHORITY_LANGUAGE"( 
+	            			"AUTH_CD"
+			              , "AUTH_NM"
+						  , "AUTH_CL"
+						  , "SYSTEM_CL"
+						  , "LANG_CL"
+						  , "REG_ID"
+						  ,	"REG_DTM"
+						  ,	"UPD_ID"
+						  ,	"UPD_DTM"
+	       			) SELECT 
+	       					#{AUTH_CD}
+						  , #{LANG_VALUE}
+						  , #{AUTH_CL}
+						  , #{SYSTEM_CL}    
+			              , #{LANG_CL}
+			              , #{g_userId}
+		              	  , NOW()
+		              	  , #{g_userId}
+		              	  , NOW()
+		              WHERE NOT EXISTS (SELECT 
+										"SYSTEM_CL", "AUTH_CD", "LANG_CL" 
+										FROM UPSERT 
+										WHERE "SYSTEM_CL" = #{SYSTEM_CL} 
+    									AND   "AUTH_CD" = #{AUTH_CD} 
+    									AND   "LANG_CL" = #{LANG_CL}
+	       				)
+	</insert>	
+	<insert id="insertAuthority">	
+        INSERT /* [rightsService.sqlx][rights.insertAuthority][권한그룹 등록][김병욱][2012.02.06] */
+          INTO "SYS_AUTHORITY"
+        (
+            "AUTH_CD",
+            "AUTH_NM",
+            "AUTH_CL",
+            "SYSTEM_CL",
+            "USE_YN",
+            "REG_ID",
+            "REG_DTM"
+        )
+        VALUES
+        (
+              #{AUTH_CD}
+            , #{AUTH_NM}
+            , #{AUTH_CL}
+            , #{SYSTEM_CL}
+            , #{USE_YN}
+            , #{g_userId}
+            , NOW()
+        )
+    </insert>
+	<delete id="deleteAuthority">
+        DELETE  /* [rightsService.sqlx][rights.deleteAuthority][김병욱][권한그룹 삭제][김병욱][2012.02.06]  */
+          FROM  "SYS_AUTHORITY"
+         WHERE  "AUTH_CD" = #{AUTH_CD} 
+      </delete>
+</mapper>

@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="label">
+	<!-- 라벨관리 중복 체크 조회 -->
+	<select id="getCkLabelList" resultType="HMap">
+		SELECT  /* [labelService.sqlx][label.getCkLabelList][라벨관리 중복 체크 조회][강정현][2013.04.17] */
+				COUNT(*) AS "CNT"
+	   	  FROM	"SYS_LABEL"
+		 WHERE 	"SYSTEM_CL" = #{SYSTEM_CL}
+		   AND	"LABEL_CD" = #{LABEL_CD}
+    </select>
+	<!-- 라벨관리 조회 -->
+	<select id="getLabelList" resultType="HMap">
+		SELECT  /* [labelService.sqlx][label.getLabelList][라벨관리 조회][강정현][2013.04.17] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY "LABEL_CD" ASC) AS "ROWCNT"
+				      FROM 	(
+				      			SELECT	  "LABEL_CD" 		/* 라벨코드 */
+        								, "SYSTEM_CL"		/* 시스템구분 */
+        								, "LABEL_NM"		/* 라벨명 */
+        								, "ATTRIBUTE4"	/* 마이플렛폼 도메인 속성(TYPE) */
+								        , "ATTRIBUTE5"	/* 마이플렛폼 도메인 속성(LIMIT) */
+								        , "ATTRIBUTE3"	/* 마이플렛폼 도메인 속성(ENABLE) */
+								        , "ATTRIBUTE6"	/* 마이플렛폼 도메인 속성(DECIMAL) */
+								        , "ATTRIBUTE1"	/* 마이플렛폼 도메인 속성(FORMAT) */
+								        , "ATTRIBUTE2"	/* 마이플렛폼 도메인 속성(VISIBLE) */
+								        , "USE_YN"
+								        ,
+								        <!-- 그리드 sorting -->
+										<if test='sidx != null and sidx !=""'>					    
+											ROW_NUMBER() OVER (
+											<trim prefix="ORDER BY">
+											<if test="sidx == &quot;LABEL_CD&quot;">"LABEL_CD"</if>
+											<if test="sidx == &quot;LABEL_NM&quot;">"LABEL_NM"</if>
+											<if test="sord == &quot;asc&quot;">ASC</if>
+											<if test="sord == &quot;desc&quot;">DESC</if>
+											</trim>
+										 	) AS "ROWNUM"
+									  	</if>				    						    
+										<!--// 그리드 sorting -->
+										<if test="sidx == null">
+										ROW_NUMBER() OVER (ORDER BY "LABEL_CD" ASC) AS "ROWNUM"
+										</if>
+  							   	  FROM	"SYS_LABEL"
+ 								 WHERE 	1 = 1
+ 								 <if test="SYSTEM_CL != null and SYSTEM_CL != ''">
+ 								   AND	"SYSTEM_CL" = #{SYSTEM_CL}
+ 								 </if>
+ 								 <if test="LABEL_CD != null and LABEL_CD != ''">
+ 								 	AND "LABEL_CD" LIKE '%'||#{LABEL_CD}||'%'
+ 								 </if>
+ 								 <if test="LABEL_NM != null and LABEL_NM != ''">
+ 								 	AND "LABEL_NM" LIKE '%'||#{LABEL_NM}||'%'
+ 								 </if>
+ 								 <if test="USE_YN != null and USE_YN != ''">
+ 								 	AND "USE_YN" = CASE WHEN #{USE_YN} = 'Y' THEN '1' WHEN #{USE_YN} = '1' THEN '1' ELSE '0' END
+ 								 </if>
+      						) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST(#{END_ROW} AS NUMERIC)
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;= CAST(#{START_ROW} AS NUMERIC)
+    </select>
+	<!-- 라벨관리 데이터 총 갯수 조회 -->
+    <select id="getLabelListTotalCount" resultType="int">
+    	SELECT  /* [labelService.sqlx][label.getLabelListTotalCount][강정현][2013.04.17] */
+                COUNT(1)
+          FROM  "SYS_LABEL"
+         WHERE 	1 = 1
+		<if test="SYSTEM_CL != null and SYSTEM_CL != ''">
+			AND	"SYSTEM_CL" = #{SYSTEM_CL}
+		</if>
+		<if test="LABEL_CD != null and LABEL_CD != ''">
+			AND "LABEL_CD" LIKE #{LABEL_CD}||'%'
+		</if>
+		<if test="LABEL_NM != null and LABEL_NM != ''">
+			AND "LABEL_NM" LIKE #{LABEL_NM}||'%'
+		</if>
+		<if test="USE_YN != null and USE_YN != ''">
+			AND "USE_YN" = CASE WHEN #{USE_YN} = 'Y' THEN '1' WHEN #{USE_YN} = '1' THEN '1' ELSE '0' END
+		</if>
+    </select>
+   	<!-- 라벨관리 등록 -->
+   	<insert id="inserteLabelList">
+        INSERT  /* [labelService.sqlx][label.inserteLabelList][라벨관리 등록][강정현][2013.04.17] */
+        INTO  "SYS_LABEL"	(
+           			  "SYSTEM_CL"
+           			, "LABEL_CD"
+            		, "LABEL_NM"
+            		, "ATTRIBUTE1"
+            		, "ATTRIBUTE2"
+            		, "ATTRIBUTE3"
+            		, "ATTRIBUTE4"
+            		, "ATTRIBUTE5"
+            		, "ATTRIBUTE6"
+            		, "USE_YN"
+            		, "REG_ID"
+            		, "REG_DTM"
+        ) VALUES (
+              		  #{SYSTEM_CL}
+            		, #{LABEL_CD}
+            		, #{LABEL_NM}
+            		, #{ATTRIBUTE1}
+            		, #{ATTRIBUTE2}
+            		, #{ATTRIBUTE3}
+            		, #{ATTRIBUTE4}
+            		, #{ATTRIBUTE5}
+            		, #{ATTRIBUTE6}
+            		, COALESCE(#{USE_YN},'0')
+            		, #{g_userId}
+            		, NOW()
+        )
+    </insert>
+    <!-- 레벨관리 수정 -->
+    <update id="updateLabelList">
+        UPDATE  /* [labelService.sqlx][label.updateLabelList][레벨 관리 수정][강정현][2013.04.30] */
+                "SYS_LABEL"
+        SET  	"LABEL_NM"     = #{LABEL_NM}
+            	, "ATTRIBUTE1" = #{ATTRIBUTE1}
+            	, "ATTRIBUTE2" = #{ATTRIBUTE2}
+            	, "ATTRIBUTE3" = #{ATTRIBUTE3}
+            	, "ATTRIBUTE4" = #{ATTRIBUTE4}
+            	, "ATTRIBUTE5" = #{ATTRIBUTE5}
+            	, "ATTRIBUTE6" = #{ATTRIBUTE6}
+            	, "USE_YN"     =  COALESCE(#{USE_YN},'0')
+            	, "UPD_ID"    = #{g_userId}
+            	, "UPD_DTM"   = NOW()
+		WHERE  	"SYSTEM_CL" 	= #{SYSTEM_CL}
+		AND		"LABEL_CD" 	= #{LABEL_CD}
+    </update>
+    <!-- 로케일별 라벨 리스트 (Miplatform) -->
+    <!-- 
+	<select id="getLabelDomainList" resultType="HMap">
+		SELECT  /* [labelService.sqlx][label.getLabelDomainList][로케일별 라벨 리스트][shks][2013.05.2] */
+		        A."LABEL_CD" AS "DOMAIN_ID",
+		        CASE WHEN B."LABEL_NM" IS NULL THEN A."LABEL_NM" ELSE B."LABEL_NM" END AS "DOMAIN_TEXT",
+		        COALESCE(A."ATTRIBUTE1",'') AS "DOMAIN_FORMAT",
+		        COALESCE(A."ATTRIBUTE2",'') AS "DOMAIN_VISIBLE",
+		        COALESCE(A."ATTRIBUTE3",'') AS "DOMAIN_ENABLE",
+		        COALESCE(A."ATTRIBUTE4",'') AS "DOMAIN_TYPE",
+		        COALESCE(A."ATTRIBUTE5",'') AS "DOMAIN_LIMIT",
+		        COALESCE(A."ATTRIBUTE6",'') AS "DOMAIN_DECIMAL"
+		FROM 	"SYS_LABEL" A LEFT OUTER JOIN "SYS_LABEL_LANGUAGE" B ON A."LABEL_CD" = B."LABEL_CD"
+		WHERE B."LANG_CL" = #{g_lang}
+	</select>
+	 -->
+	<!-- 다국어 라벨 리스트 -->
+	<select id="getHtmlLabelList" resultType="HMap">
+		SELECT	/* [labelService.sqlx][label.getHtmlLabelList][다국어 라벨 리스트][강정현][2013.05.2] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	paging_t1.*
+				       		<!-- 그리드 sorting -->
+							<if test='sidx != null and sidx !=""'>					    
+								, ROW_NUMBER() OVER (ORDER BY 
+								<if test='sidx == &quot;LABEL_CD&quot;'>"LABEL_CD"</if>
+									<if test='sidx == &quot;LABEL_NM&quot;'>"LABEL_NM"</if>
+										<if test='sord == &quot;asc&quot;'>ASC</if>
+								 		<if test='sord == &quot;desc&quot;'>DESC</if>
+							 	) AS "ROWCNT"
+						  	</if>				    						    
+							<!--// 그리드 sorting -->
+							<if test="sidx == null">
+								, ROW_NUMBER() OVER (ORDER BY "LABEL_CD" ASC) AS "ROWCNT"
+							</if>
+				      FROM 	(
+				      			SELECT	AA."USE_YN"
+						        		, AA."SYSTEM_CL"
+						        		, AA."LABEL_CD"
+						        		, AA."LABEL_NM"
+						       	 <foreach collection="codeList" item="item" separator="," open=",">
+						        		MAX(CASE WHEN BB."LANG_CL" = #{item} THEN BB."LABEL_NM" ELSE '' END) AS ${item}
+						       	</foreach>
+						       	 	<!-- 그리드 sorting -->
+								<if test='sidx != null and sidx !=""'>				    
+									, ROW_NUMBER() OVER (ORDER BY 
+									<if test='sidx == &quot;LABEL_CD&quot;'>AA."LABEL_CD"</if>
+									<if test='sidx == &quot;LABEL_NM&quot;'>AA."LABEL_NM"</if>
+
+							<if test='sord == &quot;asc&quot;'>ASC</if>
+					 		<if test='sord == &quot;desc&quot;'>DESC</if>
+
+								 	) AS "ROWNUM"
+							  </if>				    						    
+								<!--// 그리드 sorting -->
+								<if test='sidx == null and sidx ==""'>	
+									, ROW_NUMBER() OVER (ORDER BY AA."LABEL_CD" ASC) AS "ROWNUM"
+								</if>
+								  FROM	"SYS_LABEL" AA JOIN "SYS_LABEL_LANGUAGE" BB ON BB."SYSTEM_CL" = AA."SYSTEM_CL" AND BB."LABEL_CD" = AA."LABEL_CD"
+								 WHERE	AA."SYSTEM_CL" = #{SYSTEM_CL}	/* 시스템 구분 */
+							  	 GROUP BY  AA."USE_YN"
+						        		, AA."SYSTEM_CL"
+						        		, AA."LABEL_CD"
+						        		, AA."LABEL_NM"
+							)PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST({END_ROW} AS NUMERIC)
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;= CAST({START_ROW} AS NUMERIC)
+	</select>
+	
+	<!-- 라벨 COUNT 수 조회 -->
+	<select id="getHtmlLabelTotalCount" resultType="int">
+		SELECT  /* [labelService.sqlx][label.getHtmlLabelTotalCount][라벨 COUNT 수 조회][강정현][2013.04.18] */
+		        COUNT(1)
+		  FROM	(
+		  			SELECT	AA."SYSTEM_CL"
+		  			  FROM	"SYS_LABEL" AA JOIN "SYS_LABEL_LANGUAGE" BB ON BB."SYSTEM_CL" = AA."SYSTEM_CL" AND BB."LABEL_CD" = AA."LABEL_CD"
+		 			 WHERE	AA."SYSTEM_CL" = #{SYSTEM_CL}	/* 시스템 구분 */
+	  	 			 GROUP BY  AA."USE_YN"
+		        			 , AA."SYSTEM_CL"
+			        		 , AA."LABEL_CD"
+			        		 , AA."LABEL_NM"
+        		) A
+  	</select>
+	<!-- 라벨 관리 다국어 등록 -->
+	<insert id="insertLabelMultilinguaList">
+		INSERT 	/* [labelService.sqlx][label.insertLabelMultilinguaList][라벨 관리 다국어 등록][강정현][2013.04.18] */
+		INTO  "SYS_LABEL_LANGUAGE" (
+		  		"SYSTEM_CL"
+		  	  , "LABEL_CD"
+              , "LABEL_NM"
+			  , "LANG_CL"
+		) VALUES (
+				#{SYSTEM_CL}
+			  , #{LABEL_CD}
+			  , #{LANG_VALUE}
+              , #{LANG_CL}
+		)
+	</insert>
+	<!-- 라벨 관리 다국어 수정 -->
+	<update id="updateLabelMultilinguaList">
+		UPDATE 	/* [labelService.sqlx][label.updateLabelMultilinguaList][라벨 관리 관리 다국어 수정][강정현][2013.04.18] */
+		       	"SYS_LABEL_LANGUAGE"
+		   SET  "LABEL_NM" = #{LANG_VALUE}
+		   		, "UPD_ID" = #{USERID}
+            	, "UPD_DTM" = NOW()
+         WHERE  "SYSTEM_CL" = #{SYSTEM_CL}
+           AND	"LABEL_CD" = #{LABEL_CD}
+           AND	"LANG_CL" = #{LANG_CL}
+    </update>
+    <!-- 다국어파일을 생성하기 위한 라벨 조회 (Miplatform) -->
+    <!-- 
+	<select id="getLabelListForDomain" resultType="HMap">
+		SELECT    /*[labelService.sqlx][label.getLabelListForDomain]다국어파일을 생성하기 위한 라벨 조회][shks][2013.05.17]*/
+		          A."LABEL_CD",
+		          CASE WHEN B."LABEL_NM" IS NULL THEN A."LABEL_NM" ELSE B."LABEL_NM" END AS "LABEL_NM",
+		          "ATTRIBUTE4"	AS "TYPE",
+		          "ATTRIBUTE5"	AS "LIMIT",
+		          "ATTRIBUTE3"	AS "ENABLE",
+		          "ATTRIBUTE6"	AS "DECIMAL",
+		          "ATTRIBUTE1"	AS "FORMAT",
+		          "ATTRIBUTE2"	AS "VISIBLE"
+		FROM      "SYS_LABEL" A LEFT OUTER JOIN "SYS_LABEL_LANGUAGE" B ON A."LABEL_CD" = B."LABEL_CD"
+		WHERE     A."USE_YN" = '1'
+		AND		  A."SYSTEM_CL" = 'COMMON'
+		AND		  B."LANG_CL" = #{g_lang}
+		ORDER BY  A."LABEL_CD", B."LANG_CL"
+	</select>
+	 -->
+	<!-- 다국어파일을 생성하기 위한 라벨 조회 (HTML) -->
+	<select id="getLabelListForHTML" resultType="HMap">
+		SELECT    /* [labelService.sqlx][label.getLabelListForHTML]다국어파일을 생성하기 위한 라벨 조회][shks][2013.05.30] */
+		          "LABEL_CD",
+		          "LABEL_NM" AS "LABEL_NM"
+		FROM      "SYS_LABEL"
+		WHERE     "USE_YN" = '1'
+		AND		  "SYSTEM_CL" = 'HTML'
+		ORDER BY  "LABEL_CD"
+	</select>	
+	<!-- 다국어파일을 생성하기 위한 라벨 조회 (EXTJS) -->
+	<!-- 
+	<select id="getLabelListForEXTJS" resultType="HMap">
+		SELECT    /* [labelService.sqlx][label.getLabelListForHTML]다국어파일을 생성하기 위한 라벨 조회][shks][2013.05.30] */
+		          A."LABEL_CD",
+		          CASE WHEN B."LABEL_NM" IS NULL THEN A."LABEL_NM" ELSE B."LABEL_NM" END AS "LABEL_NM"
+		FROM      "SYS_LABEL" A LEFT OUTER JOIN "SYS_LABEL_LANGUAGE" B ON A."LABEL_CD" = B."LABEL_CD"
+		WHERE     A."USE_YN" = '1'
+		AND		  A."SYSTEM_CL" = 'EXTJS'
+		AND		  B."LANG_CL" = #{g_lang}
+		ORDER BY  A."LABEL_CD", B."LANG_CL"
+	</select>
+	 -->
+	<!-- 레벨관리 다국어 정보 조회 -->
+	<select id="getLabelMultilinguaList" resultType="HMap">
+		SELECT	/* [labelService.sqlx][label.getLabelMultilinguaList]레벨관리 다국어 정보 조회][강정현][2013.04.18] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY "SYSTEM_CL" ASC) "ROWCNT"
+				      FROM 	(
+								SELECT	 A."SYSTEM_CL"
+										, A."LABEL_CD"
+										, A."DEF_VALUE"
+										, A."LANG_CL"
+										, B."COMM_CD_NM" AS "LANG_CL_NM"
+						      			, A."LABEL_NM" AS "LANG_VALUE"
+						      			, B."LNUP_ORD"
+						      			, A."USE_YN"
+						      			, ROW_NUMBER() OVER (ORDER BY "SYSTEM_CL" ASC) "ROWNUM"
+								  FROM	(
+								  			SELECT	AA.*
+								  					, BB."LABEL_NM" AS "DEF_VALUE"
+								  					, BB."USE_YN"
+								  			  FROM	"SYS_LABEL_LANGUAGE" AA
+						                      JOIN	"SYS_LABEL" BB
+						                        ON 	BB."SYSTEM_CL" = AA."SYSTEM_CL" AND BB."LABEL_CD" = AA."LABEL_CD"
+						      			) A
+						  		  JOIN	(
+						              		SELECT	T1."COMM_CD"
+			   										,T2."COMM_CD_NM"
+			   										,T1."LNUP_ORD"
+						              		  FROM	(
+						              		  			SELECT	BB."COMM_CD"
+									                          	, BB."COMM_CD_NM"
+									                          	, BB."LNUP_ORD"
+														  FROM	"SYS_CL_CODE" AA
+									            		  JOIN  "SYS_CODE" BB
+														    ON	AA."COMM_CL_CD" = BB."COMM_CL_CD"
+									           			 WHERE	AA."COMM_CL_CD" = 'GS008'
+									           			   AND	AA."USE_YN" = '1'
+									           			   AND 	BB."USE_YN" = '1'
+									           		) T1 JOIN "SYS_CODE_LANGUAGE" T2 ON T1."COMM_CD" = T2."COMM_CD"
+                         					 WHERE 	T2."LANG_CL" = #{g_lang}
+						              	)B
+								    ON	A."LANG_CL" = B."COMM_CD"
+								 WHERE	A."SYSTEM_CL" = #{SYSTEM_CL}
+								 ORDER	BY A."SYSTEM_CL",A."LABEL_CD"
+							) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;= (SELECT COUNT(1) * CAST(#{END_ROW} AS NUMERIC)
+											  FROM	"SYS_CL_CODE" AA
+						            		  JOIN  "SYS_CODE" BB
+											    ON	AA."COMM_CL_CD" = BB."COMM_CL_CD"
+						           			 WHERE	AA."COMM_CL_CD" = 'GS008'
+						           			   AND	BB."USE_YN" = '1' )
+		         	<!-- 그리드 sorting --><!--// 그리드 sorting -->
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;=CASE WHEN CAST(#{START_ROW} AS NUMERIC) = '1' THEN CAST(#{START_ROW} AS NUMERIC) ELSE (SELECT COUNT(1) * CAST(#{START_ROW} AS NUMERIC)
+											  FROM	"SYS_CL_CODE" AA
+						            		  JOIN  "SYS_CODE" BB
+											    ON	AA."COMM_CL_CD" = BB."COMM_CL_CD"
+						           			 WHERE	AA."COMM_CL_CD" = 'GS008'
+						           			   AND	BB."USE_YN" = '1' ) END
+	</select>
+	<!-- 레벨관리 다국어 정보 조회 -->
+	<select id="getLabelMultilinguaListTotalCount" resultType="int">
+		SELECT 	/* [labelService.sqlx][label.getLabelMultilinguaListTotalCount][강정현][2013.04.17] */
+				COUNT(1)
+    	  FROM (
+	      			SELECT 	"SYSTEM_CL"
+	      					, "LABEL_CD"
+	      			  FROM	"SYS_LABEL_LANGUAGE"
+	    			 WHERE	1 = 1
+	        		   AND 	"SYSTEM_CL" =  #{SYSTEM_CL}
+	    			 GROUP 	BY	"SYSTEM_CL", "LABEL_CD"
+        		) A
+	</select>
+	<!-- 최근 변경된 라벨 시간조회 (Miplatform) -->
+	<!-- 
+	<select id="getRecentModDateForMiplatform" resultType="HMap">
+		SELECT /* [labelService.sqlx][label.getRecentModDateForMiplatform]최근 변경된 라벨 시간조회][shks][2013.05.17] */
+				MAX(A."UPD_DTM") AS "UPD_DTM"
+		FROM (
+		  SELECT COALESCE(TO_CHAR(MAX("REG_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL" 
+		  WHERE "SYSTEM_CL" = 'COMMON'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("UPD_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL"
+		  WHERE "SYSTEM_CL" = 'COMMON'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("REG_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL_LANGUAGE"
+		  WHERE "SYSTEM_CL" = 'COMMON'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("UPD_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL_LANGUAGE"
+		  WHERE "SYSTEM_CL" = 'COMMON'
+		) A
+	</select>
+	 -->
+	<!-- 최근 변경된 라벨 시간조회 (HTML) -->
+	<select id="getRecentModDateForHTML" resultType="HMap">
+		SELECT /* [labelService.sqlx][label.getRecentModDateForHTML]최근 변경된 라벨 시간조회][shks][2013.06.02] */
+				MAX(A."UPD_DTM") AS "UPD_DTM"
+		FROM (
+		  SELECT COALESCE(TO_CHAR(MAX("REG_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL"
+		  WHERE "SYSTEM_CL" = 'HTML'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("UPD_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL"
+		  WHERE "SYSTEM_CL" = 'HTML'
+		) A
+	</select>
+	
+	<!-- 최근 변경된 라벨 시간조회 (EXTJS) -->
+	<!-- 
+	<select id="getRecentModDateForEXTJS" resultType="HMap">
+		SELECT /* [labelService.sqlx][label.getRecentModDateForHTML]최근 변경된 라벨 시간조회][shks][2013.06.02] */
+				MAX(A."UPD_DTM") AS "UPD_DTM"
+		FROM (
+		  SELECT COALESCE(TO_CHAR(MAX("REG_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL"
+		  WHERE "SYSTEM_CL" = 'EXTJS'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("UPD_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL"
+		  WHERE "SYSTEM_CL" = 'EXTJS'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("REG_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL_LANGUAGE"
+		  WHERE "SYSTEM_CL" = 'EXTJS'
+		  UNION ALL
+		  SELECT COALESCE(TO_CHAR(MAX("UPD_DTM"),'yyyyMMddhh24miss'),'0') AS "UPD_DTM"
+		  FROM "SYS_LABEL_LANGUAGE"
+		  WHERE "SYSTEM_CL" = 'EXTJS'
+		) A
+	</select>
+	 -->
+</mapper>

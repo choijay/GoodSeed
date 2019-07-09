@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="commonCode">
+	<!-- 공통그룹코드 정보 조회 -->
+	<select id="getCommonGroupCodeList" resultType="HMap">
+		SELECT  /* [commonCodeService.sqlx][commonCode.getCommonGroupCodeList][공통그룹코드 정보 조회][강정현][2013.04.11] */
+				  "COMM_CL_CD"
+      			, "COMM_CL_CD_NM"
+      			, "RMK"
+      			, "USE_YN"
+      			, "UPD_ID"
+      			, TO_CHAR("UPD_DTM", 'YYYY-MM-DD') AS "UPD_DTM"
+		FROM 	"SYS_CL_CODE"
+		<trim prefix="WHERE" prefixOverrides="AND |OR">
+			<if test='COMM_CL_CD !=null and COMM_CL_CD !=""'>
+			AND "COMM_CL_CD" LIKE CAST(#{COMM_CL_CD} AS TEXT) || '%'
+			</if>
+			<if test='COMM_CL_CD_NM !=null and COMM_CL_CD_NM !=""'>
+   			AND "COMM_CL_CD_NM" LIKE CAST(#{COMM_CL_CD_NM} AS TEXT)||'%'
+   			</if>
+   			<if test='USE_YN !=null and USE_YN !=""'>
+   			AND "USE_YN" = CASE WHEN #{USE_YN}='Y' THEN '1' ELSE '0' END
+   			</if>
+		</trim>
+   		<!-- 그리드 sorting -->
+		<if test="sidx != null">
+			ORDER BY
+			<if test="sidx == &quot;COMM_CL_CD&quot;">"COMM_CL_CD"</if>
+			<if test="sidx == &quot;COMM_CL_CD_NM&quot;">"COMM_CL_CD_NM"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>
+		</if>
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY "COMM_CL_CD" ASC
+		</if>
+	</select>
+	<!-- 공통코드 정보 조회 -->
+	<select id="getCommonCodeList" resultType="HMap">
+		SELECT  /* [commonCodeService.sqlx][commonCode.getCommonCodeList][공통코드 정보 조회][강정현][2013.04.11] */
+				 "COMM_CL_CD"
+    			, "COMM_CD"
+    			, "COMM_CD_NM"
+    			, "LNUP_ORD"
+    			, "RMK"
+    			, "USE_YN"
+    			, "UPD_ID"
+    			, TO_CHAR("UPD_DTM",'YYYY-MM-DD') AS "UPD_DTM"
+		FROM	"SYS_CODE"
+		WHERE	"COMM_CL_CD" = #{COMM_CL_CD}
+		 <!-- 그리드 sorting -->
+		<if test="sidx != null">
+			ORDER BY
+			<if test="sidx == &quot;COMM_CD&quot;">"COMM_CD"</if>
+			<if test="sidx == &quot;COMM_CD_NM&quot;">"COMM_CD_NM"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>
+		</if>
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY "COMM_CD" ASC
+		</if>
+	</select>
+	<!-- 공통그룹코드 중복 체크 조회 -->
+	<select id="getCommonGroupCodeRedundancyCheck" resultType="int">
+		SELECT  /* [commonCodeService.sqlx][commonCode.getCommonGroupCodeRedundancyCheck][공통그룹코드 중복 체크 조회][강정현][2013.04.18] */
+				COUNT(*)
+		FROM 	"SYS_CL_CODE"
+		WHERE	"COMM_CL_CD" = #{COMM_CL_CD}
+	</select>
+	<!-- 공통그룹코드 다국어 조회 -->
+	<select id="getCommonGroupCodeListMultilingualHTML" resultType="HMap">
+		SELECT	/*[commonCodeService.sqlx][commonCode.getCommonGroupCodeListMultilingualHTML][ 다국어 공통그룹코드 조회 (HTML용)][강정현][2013.05.03]*/
+        		AA."USE_YN"
+        		, AA."COMM_CL_CD"
+        		, AA."COMM_CL_CD_NM"
+       	 <foreach collection="codeList" item="item" separator="," open=",">
+        		MAX(CASE WHEN BB."LANG_CL"=#{item} THEN BB."COMM_CD_NM" ELSE '' END) AS ${item}
+       	</foreach>
+		FROM	"SYS_CL_CODE" AA JOIN "FRAMEONE_CL_CODE_LANGUAGE" BB ON	BB."COMM_CL_CD" = AA."COMM_CL_CD"
+		<trim prefix="WHERE" prefixOverrides="AND |OR">
+	     	<if test='COMM_CL_CD !=null and COMM_CL_CD != ""'>
+			AND AA."COMM_CL_CD" LIKE #{COMM_CL_CD} || '%'
+			</if>
+			<if test='COMM_CL_CD_NM !=null and COMM_CL_CD_NM != ""'>
+			AND AA."COMM_CL_CD_NM" like to_char(#{COMM_CL_CD_NM})||'%'
+			</if>
+			<if test='USE_YN !=null and USE_YN != ""'>
+			AND AA."USE_YN" = CASE WHEN #{USE_YN}='Y' THEN '1' ELSE '0' END
+			</if>
+		</trim>
+	  	  	GROUP BY  AA."USE_YN", AA."COMM_CL_CD", AA."COMM_CL_CD_NM"
+		<!-- 그리드 sorting -->
+			<if test="sidx !=null">
+			ORDER BY
+			<if test="sidx == &quot;COMM_CL_CD&quot;">AA."COMM_CL_CD"</if>
+			<if test="sidx == &quot;COMM_CL_CD_NM&quot;">AA."COMM_CL_CD_NM"</if>
+
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>
+			</if>
+		<!--// 그리드 sorting -->
+		<if test="sidx ==null">
+			ORDER BY AA."COMM_CL_CD" ASC
+		</if>
+	</select>
+	<!-- 공통코드 다국어 조회 -->
+	<select id="getCommonCodeListMultilingualHTML" resultType="HMap">
+		SELECT	/*[commonCodeService.sqlx][commonCode.getCommonCodeListMultilingualHTML][ 공통코드 다국어 조회 (HTML용)][강정현][2013.05.03]*/
+        		AA."USE_YN"
+        		, AA."COMM_CL_CD"
+        		, AA."COMM_CD"
+        		, AA."COMM_CD_NM"
+       	 <foreach collection="codeList" item="item" separator="," open=",">
+        		MAX(CASE WHEN BB."LANG_CL"=#{item} THEN BB."COMM_CD_NM" ELSE '' END) AS ${item}
+       	</foreach>
+		  FROM	"SYS_CODE" AA JOIN "FRAMEONE_CODE_LANGUAGE" BB ON	BB."COMM_CL_CD" = AA."COMM_CL_CD"   AND BB."COMM_CD" = AA."COMM_CD"
+		  WHERE BB."COMM_CL_CD" = #{COMM_CL_CD}
+	      GROUP BY  AA."USE_YN", AA."COMM_CL_CD", AA."COMM_CD", AA."COMM_CD_NM"
+		<!-- 그리드 sorting -->
+		<if test="sidx !=null">
+			ORDER BY
+			<if test="sidx == &quot;COMM_CD&quot;">AA."COMM_CD"</if>
+			<if test="sidx == &quot;COMM_CD_NM&quot;">AA."COMM_CD_NM"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>
+		</if>
+		<!--// 그리드 sorting -->
+		<if test="sidx ==null">
+			ORDER BY AA."COMM_CD" ASC
+		</if>
+	</select>
+	<!-- 공통그룹코드 등록 -->
+	<insert id="insertCommonGroupCode">
+		INSERT 	/* [commonCodeService.sqlx][commonCode.insertCommonGroupCode][공통그룹코드 등록][강정현][2013.04.11] */
+		INTO	"SYS_CL_CODE"(
+		  			  "COMM_CL_CD"
+		  			, "COMM_CL_CD_NM"
+		  			, "RMK"
+		  			, "USE_YN"
+		  			, "REG_ID"
+		  			, "REG_DTM"
+		  			, "UPD_ID"
+		  			, "UPD_DTM"
+		) VALUES (
+					  #{COMM_CL_CD}
+					, #{COMM_CL_CD_NM}
+					, #{RMK}
+					, COALESCE(#{USE_YN},'1')
+					, #{g_userId}
+	          		, NOW()
+			   		, #{g_userId}
+			   		, NOW()
+		)
+	</insert>
+    <!-- 공통코드 등록 -->
+	<insert id="insertCommonCode">
+		INSERT /*[commonCodeService.sqlx][commonCode.insertCommonCode][ 공통코드 등록][강정현][2013.04.12]*/
+		INTO "SYS_CODE" (
+		  			"COMM_CL_CD"
+		  			, "COMM_CD"
+		  			, "COMM_CD_NM"
+		  			, "LNUP_ORD"
+		  			, "RMK"
+		  			, "USE_YN"
+		  			, "DFLT_YN"
+		  			, "REG_ID"
+		  			, "REG_DTM"
+		  			, "UPD_ID"
+		  			, "UPD_DTM"
+		) VALUES (
+					#{COMM_CL_CD}
+					, #{COMM_CD}
+					, #{COMM_CD_NM}
+					, CAST(#{LNUP_ORD} AS NUMERIC)
+					, #{RMK}
+					, COALESCE(#{USE_YN},'1')
+					, 'Y'
+					, #{g_userId}
+	          		, NOW()
+			   		, #{g_userId}
+			   		, NOW()
+		)
+	</insert>
+
+	<!-- 공통그룹코드 수정 -->
+	<update id="updateCommonGroupCode">
+		UPDATE  /* [commonCodeService.sqlx][commonCode.updateCommonGroupCode][공통그룹코드 수정][강정현][2013.04.12] */
+				"SYS_CL_CODE"
+		SET		"COMM_CL_CD_NM"      		= #{COMM_CL_CD_NM}
+		  		, "RMK"				 	= #{RMK}
+		  		, "USE_YN"			 	= #{USE_YN}
+		  		, "UPD_ID"			 	= #{g_userId}
+		  		, "UPD_DTM"			 	= NOW()
+         WHERE  "COMM_CL_CD" 				= #{COMM_CL_CD}
+    </update>
+	<!-- 공통코드 수정 -->
+	<update id="updateCommmonCode">
+		UPDATE  /* [commonCodeService.sqlx][commonCode.updateCommmonCode][공통코드 수정][강정현][2013.04.12] */
+		       	"SYS_CODE"
+		SET		"COMM_CD_NM"	= #{COMM_CD_NM}
+		  		, "LNUP_ORD"	= CAST(#{LNUP_ORD} AS NUMERIC)
+		  		, "RMK" 		= #{RMK}
+		  		, "USE_YN"	= #{USE_YN}
+		  		, "UPD_ID" 	= #{g_userId}
+		  		, "UPD_DTM" 	= NOW()
+        WHERE  	"COMM_CL_CD"  = #{COMM_CL_CD}
+		AND		"COMM_CD"    = #{COMM_CD}
+    </update>
+
+    <!-- 공통코드 관리화면 외에서 호출되는 쿼리문들 -->
+    <!-- 공통코드그룹 / 공통코드 조회 : call CodeUtil.java -->
+	<select id="getCommonGroupCodeListCodeUtil" resultType="HMap">
+		SELECT /* [commonCodeService.sqlx][commonCode.getCommonGroupCodeListCodeUtil][공통코드그룹 조회][이현재][2012.01.26] */
+      			A."COMM_CL_CD" 		AS "CLCD",
+        		A."COMM_CL_CD_NM" 	AS "CLCDNM",
+        		'ko' AS "LANGCL"
+ 		FROM 	"SYS_CL_CODE" A
+		WHERE 	A."USE_YN" = '1'
+		ORDER BY A."COMM_CL_CD"
+	</select>
+	<!-- 공통코드 조회 : call CodeUtil.java -->
+	<select id="getCommonCodeListCodeUtil" resultType="HMap">
+	SELECT /* [commonCodeService.sqlx][commonCode.getCommonCodeListCodeUtil][공통코드 조회][김병욱][2012.01.26] */
+			A."COMM_CL_CD" AS "CLCD"
+      		,A."COMM_CD" AS "CD"
+			,A."COMM_CD_NM" AS "CDNM"
+			,'ko' AS "LANGCL"
+	FROM	"SYS_CODE" A JOIN "SYS_CL_CODE" B ON A."COMM_CL_CD" = B."COMM_CL_CD"
+	WHERE 	A."USE_YN" = '1'
+	AND   	B."USE_YN" = '1'
+	ORDER BY A."COMM_CL_CD", A."LNUP_ORD"
+    </select>
+	<!-- 공통코드 다국어 리스트 -->
+	<select id="getLangCode" resultType="HMap">
+		SELECT	/*[commonCodeService.sqlx][commonCode.getLangCode][공통코드 다국어 리스트][강정현][2013.05.2]*/
+				"COMM_CD"
+				, "COMM_CD_NM"
+		FROM	"SYS_CODE"
+		WHERE	"COMM_CL_CD" = 'GS008'
+		AND		"USE_YN" = '1'
+		ORDER	BY "LNUP_ORD"
+	</select>
+	<!-- 오늘날짜조회 (Miplatform)-->
+    <select id="getToday" resultType="String">
+        SELECT /* [commonCodeService.sqlx][commonCode.getToday][오늘날짜조회][공정일][2012.01.26] */
+               TO_CHAR(NOW(), 'yyyyMMdd')
+    </select>
+    <!-- 오늘날짜조회 (Miplatform)-->
+    <select id="getTodayTime" resultType="String">
+        SELECT /* [commonCodeService.sqlx][commonCode.getTodayTime][오늘날짜및시간조회][공정일][2012.01.26] */
+ 			 TO_CHAR(NOW(), 'yyyyMMddhh24miss')
+    </select>
+</mapper>

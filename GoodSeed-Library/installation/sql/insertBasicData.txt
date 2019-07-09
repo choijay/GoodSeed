@@ -1,0 +1,24 @@
+-- 1. 시스템 사용자 테이블
+-- Table: "SYS_USER"
+
+
+
+--2. 시스템설정 테이블
+-- Table: "SYS_CONFIG", 엑셀파일 참조
+
+
+
+--3. 공통그룹코드 테이블
+-- Table: "SYS_CL_CODE"
+INSERT INTO "SYS_CL_CODE"("COMM_CL_CD", "COMM_CL_CD_NM", "REMARK", "USE_YN", "REG_ID","REG_DTM", "UPD_ID", "UPD_DTM")
+    VALUES ('GS00000001', '메시지 정보', '', '1', 'admin', now(), 'admin', now());
+
+
+
+--4. 상세코드 테이블
+-- Table: "SYS_CODE"
+INSERT INTO "SYS_CODE"("COMM_CL_CD", "COMM_CD", "COMM_CD_NM", "LNUP_ORD", "REMARK", "USE_YN", "DFLT_YN", "REG_ID", "REG_DTM", "UPD_ID", "UPD_DTM")
+    VALUES ('GS00000001', 'LGN_REQUIRED_ID', '사용자ID는 필수 입력항목입니다.', 1, '', '1', '', 'admin', now(), 'admin', now());
+INSERT INTO "SYS_CODE"("COMM_CL_CD", "COMM_CD", "COMM_CD_NM", "LNUP_ORD", "REMARK", "USE_YN", "DFLT_YN", "REG_ID", "REG_DTM", "UPD_ID", "UPD_DTM")
+    VALUES ('GS00000001', 'LGN_REQUIRED_PWD', '비밀번호는 필수 입력항목입니다.', 1, '', '1', '', 'admin', now(), 'admin', now());
+    

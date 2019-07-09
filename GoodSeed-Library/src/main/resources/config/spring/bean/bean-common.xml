@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:p="http://www.springframework.org/schema/p" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+            http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+            http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <context:annotation-config />
+    <context:component-scan base-package="com" resource-pattern="**/*Service.class"/>
+    <context:component-scan base-package="com" resource-pattern="**/*Module.class"/>
+
+    <!-- ==================================================== -->
+    <!-- AOP and Transaction Setting -->
+    <!-- ==================================================== -->
+    <aop:config proxy-target-class="true">
+        <aop:advisor id="managerTx" advice-ref="txAdvice"
+            pointcut="execution(* *..service.*Service.*(..))" />
+    </aop:config>
+    <!--
+        @deprecated ~*NewTx
+        FrameOne 2.0 이후 버전부터 서비스간의 호출이 금지되고, REQUIRES_NEW 의 경우에는 두가지 방법을 제공한다.
+        1. SqlManager().insertRequiresNew, updateRequiresNew, deleteRequiresNew 메소드를 호출하여 별도 트랜잭션 처리한다.
+        2. FrameOneModule 을 상속받은 Module 클래스의 메소드 호출 매개변수로 Transaction Propagation 을 지정한다.
+
+        위와 같은 정책으로 인해서 서비스의 메소드에 ~*NewTx 는 트랜잭션이 별도로 처리는 되지만, 의미가 없어짐
+     -->
+    <tx:advice id="txAdvice">
+        <tx:attributes>
+            <tx:method name="create*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW"/>
+            <tx:method name="update*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW"/>
+            <tx:method name="delete*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW"/>
+            <tx:method name="save*NewTx" rollback-for="Exception" propagation="REQUIRES_NEW"/>
+            <tx:method name="create*" rollback-for="Exception" />
+            <tx:method name="update*" rollback-for="Exception" />
+            <tx:method name="delete*" rollback-for="Exception" />
+            <tx:method name="save*" rollback-for="Exception" />
+            <tx:method name="loggingError2DB" rollback-for="Exception" propagation="REQUIRES_NEW"/>
+            <tx:method name="*" read-only="true" propagation="SUPPORTS"/>
+        </tx:attributes>
+    </tx:advice>
+    <!-- ==================================================== -->
+    <!-- iBatis Setting -->
+    <!-- ==================================================== -->
+    <bean id="nativeJdbcExtractor"
+        class="org.springframework.jdbc.support.nativejdbc.SimpleNativeJdbcExtractor" />
+
+    <bean id="oracleLobhandler" class="org.springframework.jdbc.support.lob.OracleLobHandler">
+        <property name="nativeJdbcExtractor">
+            <ref bean="nativeJdbcExtractor" />
+        </property>
+    </bean>
+    <!--
+    **************************************************
+    * Message Source
+    **************************************************
+    -->
+   	<bean id="messageResourcePathList" class="goodseed.core.utility.config.MessageResourcePathBeanFactory" >
+        <property name="resourcePaths">
+            <list>
+                 <value>classpath:message/noticeBundle</value>
+            </list>
+        </property>
+    </bean>
+    <bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
+        <property name="basenames" ref="messageResourcePathList" />
+        <property name="fallbackToSystemLocale" value="false" />
+        <property name="cacheSeconds" value="10"/>
+    </bean>
+    <bean id="messageSourceAccessor" class="org.springframework.context.support.MessageSourceAccessor">
+        <constructor-arg ref="messageSource" />
+    </bean>
+    <!-- 권한체크 객체 -->
+    <bean id="authorityRule" class="com.common.utility.AuthorityRuleImpl" />
+    <!-- 파일 다운로드 권한체크 객체 -->
+<!--     <bean id="fileDownloadAuthorityRule" class="cj.common.syscommon.utility.FileDownloadAuthorityRuleImpl" /> -->
+<!--     <bean id="serviceAuthorityRule" class="cj.common.syscommon.utility.ExtServiceAuthorityRuleImpl"/> -->
+    <!-- service/error logging 구현체 -->
+    <bean id="loggingService" class="com.common.service.LoggingServiceImpl"/>
+    <!-- ==================================================== -->
+    <!-- Logging Configuration with AOP -->
+    <!-- ==================================================== -->
+    <aop:aspectj-autoproxy proxy-target-class="true" />
+    <bean id="serviceLogger" class="goodseed.core.utility.logging.ServiceLogger" />
+<!--     <bean id="apcManager" class="frameone.core.common.apc.ApcManager" /> -->
+
+    <!-- ==================================================== -->
+<!-- 	<bean id="blockServiceManager" class="frameone.core.utility.servicecontrol.BlockServiceManager" /> -->
+	<!-- eni -->
+	<!-- bean id="ENIManager" class="frameone.core.utility.eni.ENIManager" /-->
+
+	<bean id="exceptionManager" class="goodseed.core.exception.ExceptionManager"/>
+
+	<!-- module controller -->
+<!-- 	<bean id="moduleControlManager" class="goodseed.core.utility.servicecontrol.ModuleControlManager"/> -->
+
+	<!-- service controller -->
+<!-- 	<bean id="serviceControlManager" class="goodseed.core.utility.servicecontrol.ServiceControlManager"/> -->
+
+	<!-- Trace controller -->
+	<bean id="traceLogAdvice" class="goodseed.core.common.coverage.TraceLogAdvice"/>
+
+
+	<!-- ==================================================== -->
+    <!-- Interceptors -->
+    <!-- ==================================================== -->
+    <!-- ==================================================== -->
+    <bean id="controllerLogger" class="goodseed.core.common.interceptor.ControllerLogger" />
+    <!-- ==================================================== -->
+    <!-- MultipartResolver -->
+    <!-- ==================================================== -->
+    <!-- <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+    <bean id="multipartResolver" class="frameone.core.mvc.resolver.MultifileCommonsMultipartResolver"
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="maxUploadSize" value="10000000"/>
+    </bean>    -->
+	<!-- <bean id="fileNameResolver" class="frameone.core.utility.file.DefaultFileNameResolver"> -->
+	<!-- </bean> -->
+	<!--
+	**************************************************
+    * license
+    **************************************************
+    -->
+<!--     <bean id="licenceResourcePath" class="frameone.core.license.LicenseManager" > -->
+<!--         <property name="resourcePath"> -->
+<!--            		<value>file:C:/FrameOne4X/workspace/ProjectName-Library/src/license/license.dat</value> -->
+<!--         </property> -->
+<!--     </bean> -->
+	<!-- XSS(Cross Site Scripting) Prevention Utility -->
+	<bean id="xssShield" class="com.common.utility.XssShieldImpl" />
+
+	<task:executor id="executor" pool-size="200"/>
+ 	<task:annotation-driven executor="executor"/>
+
+<!--  	<bean id="httpServletResponse" -->
+<!-- 	 class="frameone.core.common.handler.HttpServletResponseFactoryBean" scope="request"/> -->
+
+	<bean id="responseInScopeFilter" class="goodseed.core.common.handler.ResponseInScopeFilter"/>
+
+	<!--
+	**************************************************
+    * cacheLoader
+    **************************************************
+    -->
+<!-- 	<bean id="htmlLoaderTemplate" class="cj.frameone.infinispan.HtmlCacheLoaderTemplate"/> -->
+<!-- 	<bean id="miplatformLoaderTemplate" class="cj.frameone.infinispan.MiplatformCacheLoaderTemplate"/> -->
+<!-- 	<bean id="cacheLoaderBean" class="frameone.core.infinispan.CacheLoaderList"> -->
+<!-- 		<property name="list"> -->
+<!-- 			<list> -->
+<!-- 				<ref bean="htmlLoaderTemplate"/> -->
+<!-- 				<ref bean="miplatformLoaderTemplate"/> -->
+<!-- 			</list> -->
+<!-- 		</property> -->
+<!-- 		<property name="serverId"> -->
+<!-- 			<value>FOO1</value> -->
+<!-- 		</property> -->
+<!-- 	</bean> -->
+
+<!-- 	<bean id="elementLoaderTemplate" class="cj.frameone.infinispan.HtmlElementCacheLoader"/> -->
+	<!-- <bean id="elementLoaderTemplate" class="cj.frameone.infinispan.MiplatformElementCacheLoader"/> -->
+</beans>

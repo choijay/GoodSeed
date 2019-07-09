@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="shop">
+	<!-- 매장관리 조회 -->
+	<select id="getShopList" resultType="HMap">
+		SELECT  /* [shopService.sqlx][shop.getShopList][매장관리 조회][강정현][2013.04.17] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY "SHOP_CD" ASC) AS "ROWCNT"
+				      FROM 	(
+				      			SELECT	  "SHOP_CD" 	/* 매장코드 */
+        								, "SHOP_NM"		/* 매장명 */
+        								, "MANAGER_NM"
+        								, "COTEL_NO"
+        								, "HANDPHONE_NO"
+        								, "ADDR"
+								        , "USE_YN"
+								        ,
+								        <!-- 그리드 sorting -->
+										<if test='sidx != null and sidx !=""'>					    
+											ROW_NUMBER() OVER (
+											<trim prefix="ORDER BY">
+											<if test="sidx == &quot;SHOP_CD&quot;">"SHOP_CD"</if>
+											<if test="sidx == &quot;SHOP_NM&quot;">"SHOP_NM"</if>
+											<if test="sord == &quot;asc&quot;">ASC</if>
+											<if test="sord == &quot;desc&quot;">DESC</if>
+											</trim>
+										 	) AS "ROWNUM"
+									  	</if>				    						    
+										<!--// 그리드 sorting -->
+										<if test="sidx == null">
+										ROW_NUMBER() OVER (ORDER BY "SHOP_CD" ASC) AS "ROWNUM"
+										</if>
+  							   	  FROM	"SHOP"
+ 								 WHERE 	1 = 1
+ 								 <if test="SHOP_CD != null and SHOP_CD != ''">
+ 								 	AND "SHOP_CD" LIKE #{SHOP_CD}||'%'
+ 								 </if>
+ 								 <if test="SHOP_NM != null and SHOP_NM != ''">
+ 								 	AND "SHOP_NM" LIKE #{SHOP_NM}||'%'
+ 								 </if>
+ 								 <if test="USE_YN != null and USE_YN != ''">
+ 								 	AND "USE_YN" = CASE WHEN #{USE_YN} = 'Y' THEN '1' WHEN #{USE_YN} = '1' THEN '1' ELSE '0' END
+ 								 </if>
+      						) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST(#{END_ROW} AS NUMERIC)
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;= CAST(#{START_ROW} AS NUMERIC)
+    </select>
+	<!-- 매장관리 데이터 총 갯수 조회 -->
+    <select id="getShopListTotalCount" resultType="int">
+    	SELECT  /* [shopService.sqlx][shop.getShopListTotalCount][강정현][2013.04.17] */
+                COUNT(1)
+          FROM  "SHOP"
+         WHERE 	1 = 1
+		<if test="SHOP_CD != null and SHOP_CD != ''">
+			AND "SHOP_CD" LIKE #{SHOP_CD}||'%'
+		</if>
+		<if test="SHOP_NM != null and SHOP_NM != ''">
+			AND "SHOP_NM" LIKE #{SHOP_NM}||'%'
+		</if>
+		<if test="USE_YN != null and USE_YN != ''">
+			AND "USE_YN" = CASE WHEN #{USE_YN} = 'Y' THEN '1' WHEN #{USE_YN} = '1' THEN '1' ELSE '0' END
+		</if>
+    </select>
+   	<!-- 매장관리 등록 -->
+   	<insert id="inserteShopList">
+        INSERT  /* [shopService.sqlx][shop.inserteShopList][매장관리 등록][강정현][2013.04.17] */
+        INTO  "SHOP"	(
+           			  "SHOP_CD"
+            		, "SHOP_NM"
+   					, "MANAGER_NM"
+   					, "COTEL_NO"
+   					, "HANDPHONE_NO"
+   					, "ADDR"
+            		, "USE_YN"
+            		, "REG_ID"
+            		, "REG_DTM"
+        ) VALUES (
+            		  #{SHOP_CD}
+            		, #{SHOP_NM}
+            		, #{MANAGER_NM}
+            		, #{COTEL_NO}
+            		, #{HANDPHONE_NO}
+            		, #{ADDR}
+            		, COALESCE(#{USE_YN},'0')
+            		, #{g_userId}
+            		, NOW()
+        )
+    </insert>
+    <!-- 레벨관리 수정 -->
+    <update id="updateShopList">
+        UPDATE  /* [shopService.sqlx][shop.updateShopList][레벨 관리 수정][강정현][2013.04.30] */
+                "SHOP"
+        SET  	"SHOP_NM"     	= #{SHOP_NM}
+            	, "MANAGER_NM" 	= #{MANAGER_NM}
+            	, "COTEL_NO" 	= #{COTEL_NO}
+            	, "HANDPHONE_NO" = #{HANDPHONE_NO}
+            	, "ADDR" 		= #{ADDR}
+            	, "USE_YN"		=  COALESCE(#{USE_YN},'0')
+            	, "UPD_ID"		= #{g_userId}
+            	, "UPD_DTM"		= NOW()
+		WHERE  	"SHOP_CD" 	= #{SHOP_CD}
+    </update>
+    
+	<!-- 매장코드 조회 : call CodeUtil.java -->
+	<select id="getShopListCodeUtil" resultType="HMap">
+	SELECT /* [shopService.sqlx][shop.getShopListCodeUtil][매장코드 조회][최진영][2016.12.07] */
+			'SHOP' AS "CLCD"
+      		,"SHOP_CD" AS "CD"
+			,"SHOP_NM" AS "CDNM"
+			,'ko' AS "LANGCL"
+	FROM	"SHOP"
+	WHERE 	"USE_YN" = '1'
+	ORDER BY "SHOP_NM"
+    </select>
+	
+</mapper>

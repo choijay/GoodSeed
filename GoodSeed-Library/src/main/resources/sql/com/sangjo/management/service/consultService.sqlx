@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="consult">
+	<!-- 계약관리 조회 -->
+	<select id="getConsultList" resultType="HMap">
+		SELECT 	/* [consultService.sqlx][consult.getConsultList][상담내역] */
+			"CONT_NO"
+            , "CONSULT_SEQ"
+            , SUBSTR("CONSULT_CONTENTS", 0, 100) "CONSULT_CONTENTS"
+            , (SELECT "USER_NM" FROM "SYS_USER" A WHERE A."USER_ID" = COALESCE(B."UPD_ID", B."REG_ID")) AS "SAVED_NM"
+            , TO_CHAR(COALESCE("UPD_DTM", "REG_DTM"), 'YYYY-MM-DD hh24:mi:ss') AS "SAVED_DT" 
+		  FROM "CONSULT" B
+		 WHERE "CONT_NO" = #{CONT_NO}
+		 ORDER BY "CONSULT_SEQ" DESC
+    </select>
+    
+   	<!-- 고객 등록 -->
+   	<insert id="insertConsult">
+   		<selectKey keyProperty="CONSULT_SEQ" resultType="int" order="BEFORE">
+        	SELECT COALESCE(MAX("CONSULT_SEQ"),0) + 1 FROM "CONSULT" WHERE "CONT_NO" = #{CONT_NO}
+        </selectKey>
+   		INSERT /* [consultService.sqlx][consult.insertConsult][고객 등록][최진영][2016.12.23] */
+   		INTO "CONSULT"(
+            "CONT_NO"
+            , "CONSULT_SEQ"
+            , "CONSULT_CONTENTS"
+            , "REG_ID"
+            , "REG_DTM" 
+            )
+	    VALUES (
+			#{CONT_NO}
+			, #{CONSULT_SEQ}
+			, #{CONSULT_CONTENTS}
+			, #{g_userId}
+			, NOW()
+	    	)
+    </insert>
+	
+	<update id="updateConsult">
+		UPDATE "CONSULT"
+		SET "CONSULT_CONTENTS" 	= #{CONSULT_CONTENTS}
+			, "UPD_ID" 			= #{g_userId}
+            , "UPD_DTM" 		= NOW()
+		WHERE "CONT_NO" 		= #{CONT_NO}
+		  AND "CONSULT_SEQ" 	= CAST(#{CONSULT_SEQ} AS INTEGER)
+	</update>
+	
+	<select id="getConsult" resultType="HMap">
+		SELECT 
+			"CONT_NO"
+            , "CONSULT_SEQ"
+            , "CONSULT_CONTENTS"
+		  FROM "CONSULT"
+		 WHERE "CONT_NO" = #{CONT_NO}
+		   AND "CONSULT_SEQ" = CAST(#{CONSULT_SEQ} AS INTEGER)
+	</select>
+	
+	<update id="updateCustomerOfContract">
+		UPDATE "CONTRACT"
+		SET "CUST_NO" = #{CUST_NO}
+			, "UPD_ID" 			= #{g_userId}
+            , "UPD_DTM" 		= NOW()
+		WHERE "CONT_NO" = #{CONT_NO}
+	</update>
+</mapper>

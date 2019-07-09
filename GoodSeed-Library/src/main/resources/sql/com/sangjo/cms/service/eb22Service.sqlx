@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="eb22">
+
+	<!-- EB22 자료를 EB21에 업데이트한다. EB22 자료는 실패된 것만 있기 때문에, 출금액은 0원이 되고, 미수금은 출금액만큼이 된다. -->
+	<update id="updateCMSFileDataByFailResult">
+		UPDATE "CMS_FILE_DATA" A	/* [eb22Service.sqlx][eb22.updateCMSFileDataByFailResult][jay][2017.03.10] */
+		SET	
+			"RESULT_UNPAID_AMT" = CASE WHEN B."ERROR_CD" IS NULL OR B."ERROR_CD" = '' THEN 0 ELSE B."PAY_REQ_AMT" END	/*미입금*/
+			, "RESULT_CD" = B."RESULT_CD"
+			, "ERROR_CD" = B."ERROR_CD"
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND A."PAYER_NO" = B."PAYER_NO"
+		AND A."CMS_FILE_NO" = #{EB21_CMS_FILE_NO}
+		AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</update>
+
+	<update id="updateCMSFileDataBySuccessResult">
+		UPDATE "CMS_FILE_DATA" A	/* [eb22Service.sqlx][eb22.updateCMSFileDataBySuccessResult][jay][2017.03.10] */
+		SET	
+			"RESULT_PAID_AMT" = "PAY_REQ_AMT" /*입금액*/
+			, "RESULT_UNPAID_AMT" = 0
+			, "RESULT_CD" = 'Y'
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		WHERE "CMS_FILE_NO" = #{EB21_CMS_FILE_NO}
+		AND "PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND ("ERROR_CD" IS NULL OR "ERROR_CD" = '')
+	</update>
+
+	<!-- 
+		NEXT_TEMP_PAY_AMT 차기임시출금액 초기화
+		출금액이 월납입액보다 큰 경우, 출금액을 월납입액으로 나눈 몫만큼 연체횟수에서 빼준다.
+	 -->
+	<update id="updateContractForSuccess">
+		UPDATE "CONTRACT" A		/* [eb22Service.sqlx][eb22.updateContractForSuccess][jay][2017.03.10] */
+		SET 
+			"NEXT_TEMP_PAY_AMT" = 0	
+			, "OVERDUE_COUNT" = "OVERDUE_COUNT" - (CASE WHEN B."RESULT_PAID_AMT" > A."MONTH_PAY_AMT" THEN (B."RESULT_PAID_AMT"/A."MONTH_PAY_AMT") ELSE 0 END)
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{EB21_CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND (B."ERROR_CD" = '' OR B."ERROR_CD" IS NULL)
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+	
+	<!-- 납부상태 PAY_STATUS_CD- 03: 연체, 04: 3회연체  -->
+	<update id="updateContractForFail">
+		UPDATE "CONTRACT" A		/* [eb22Service.sqlx][eb22.updateContractForFail][jay][2017.03.10] */
+		SET 
+			"OVERDUE_COUNT" = "OVERDUE_COUNT" + 1
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."ERROR_CD" <![CDATA[<>]]> ''
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+	
+	<!-- 연체횟수에 따른 납부상태 변경 -->
+	<update id="updateOverduePayStatus">
+		UPDATE "CONTRACT" A		/* [eb22Service.sqlx][eb22.updateOverduePayStatus][jay][2017.03.10] */
+		SET
+			"PAY_STATUS_CD" = CASE WHEN "OVERDUE_COUNT" <![CDATA[ > ]]> 0 AND "OVERDUE_COUNT" <![CDATA[ < ]]> 3 THEN '03' WHEN "OVERDUE_COUNT" <![CDATA[ >= ]]> 3 THEN '04' ELSE '02' END
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{EB21_CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+	
+	<!-- 완납 상태변경 -->
+	<update id="updatePayComplete">
+		UPDATE "CONTRACT" A
+		SET 
+			"CONT_STATUS_CD" = '08'
+			, "PAY_STATUS_CD" = '05'
+		FROM (
+			SELECT S."CONT_NO", SUM(S."RESULT_PAID_AMT") AS "SUM_AMT"
+			FROM "CMS_FILE_DATA" S
+			WHERE S."RESULT_UNPAID_AMT" = 0
+			AND S."CONT_NO" IN (SELECT "CONT_NO" FROM "CMS_FILE_DATA" WHERE "CMS_FILE_NO" = #{EB21_CMS_FILE_NO} AND "PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', ''))
+			GROUP BY S."CONT_NO"
+		) B
+		WHERE A."CONT_NO" = B."CONT_NO"
+		AND A."CONT_STATUS_CD" NOT IN ('05', '06')
+		AND A."MATURITY_AMT" <![CDATA[<=]]> B."SUM_AMT"	
+	</update>
+</mapper>

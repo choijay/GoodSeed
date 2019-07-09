@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="menu">
+    <select id="getMenuList" resultType="HMap">
+	 SELECT /* [menuService.sqlx][menu.getMenuList][Miplatform 메뉴 조회][김병욱][2012.03.12] */
+			AA."SYSTEM_CL"                                     AS "SYSTEMCL",
+			AA."PROG_CD"                                       AS "PROGCD",
+			CASE WHEN BB."PROG_LVL" IS NULL THEN '0' ELSE BB."PROG_LVL" END AS "PROGLVL", 
+			CASE WHEN BB."PROG_NO" IS NULL THEN '0' ELSE BB."PROG_NO" END AS "PROGNO",  
+			BB."PROG_NM" AS "PROGNM",
+    		BB."PROG_URL"                                      AS "PROGURL",
+    		SUBSTRING(BB."PROG_NO", 0, 3)                         AS "SUBFILTERLVL2" ,
+    		SUBSTRING(BB."PROG_NO", 0, 5)                         AS "SUBFILTERLVL3" ,
+    		COALESCE(BB."TOPMENU_YN",'0')                           AS "TOPMENUYN",
+    		COALESCE(BB."MENU_YN",'0')                              AS "MENUYN",
+    		CASE BB."PROG_NO" WHEN NULL THEN CC."CHARTR_REF1" ELSE NULL END AS "REFSTR1",
+    		CASE BB."PROG_NO" WHEN NULL THEN CC."NUM_REF1" ELSE NULL END AS "REFNUM1",
+    		BB."BTN1_NM"                       AS "BTN1NM",
+    		BB."BTN2_NM"                       AS "BTN2NM",
+    		BB."BTN3_NM"                       AS "BTN3NM",
+    		BB."BTN4_NM"                       AS "BTN4NM",
+    		BB."BTN5_NM"                       AS "BTN5NM",
+    		BB."BTN6_NM"                       AS "BTN6NM", 
+    		BB."BTN7_NM"                       AS "BTN7NM",
+    		BB."BTN8_NM"                       AS "BTN8NM",
+    		BB."BTN9_NM"                       AS "BTN9NM",
+    		BB."BTN10_NM" 	                   AS "BTN10NM", 
+			CC."LNUP_ORD"
+	  FROM  (
+      		 SELECT  A."SYSTEM_CL",
+      			     A."PROG_CD" 
+      		   FROM  "SYS_PROGRAM" A
+      		       JOIN (
+                       SELECT  DISTINCT "PROG_CD"
+                         FROM  "SYS_AUTH_USER"  IA JOIN 
+                               "SYS_AUTHORITY"  IB ON IA."AUTH_CD"  =IB."AUTH_CD"
+                               JOIN "SYS_AUTH_PROG"  IC ON IA."AUTH_CD"  =IC."AUTH_CD"
+                        WHERE  IA."USER_ID"  = #{g_userId}
+                          AND  IB."USE_YN"   = '1' 
+                          AND  IB."AUTH_CL"  = '1' 
+                          AND  IC."USE_YN"   = '1' 
+    				 ) B ON A."PROG_CD" = B."PROG_CD"
+      		  WHERE  A."USE_YN"  = '1' 
+              GROUP BY  A."SYSTEM_CL", A."PROG_CD"
+           UNION   
+               SELECT  A."SYSTEM_CL",
+      			    NULL 
+      		   FROM  "SYS_PROGRAM" A
+      		       JOIN (
+                       SELECT  DISTINCT "PROG_CD"
+                         FROM  "SYS_AUTH_USER"  IA JOIN 
+                               "SYS_AUTHORITY"  IB ON IA."AUTH_CD"  =IB."AUTH_CD"
+                               JOIN "SYS_AUTH_PROG"  IC ON IA."AUTH_CD"  =IC."AUTH_CD"
+                        WHERE  IA."USER_ID"  = #{g_userId}
+                          AND  IB."USE_YN"   = '1' 
+                          AND  IB."AUTH_CL"  = '1' 
+                          AND  IC."USE_YN"   = '1' 
+    				 ) B ON A."PROG_CD" = B."PROG_CD"
+      		  WHERE  A."USE_YN"  = '1' 
+              GROUP BY  A."SYSTEM_CL"
+            UNION  
+               SELECT  NULL,
+      			     A."PROG_CD" 
+      		   FROM  "SYS_PROGRAM" A
+      		       JOIN (
+                       SELECT  DISTINCT "PROG_CD"
+                         FROM  "SYS_AUTH_USER"  IA JOIN 
+                               "SYS_AUTHORITY"  IB ON IA."AUTH_CD"  =IB."AUTH_CD"
+                               JOIN "SYS_AUTH_PROG"  IC ON IA."AUTH_CD"  =IC."AUTH_CD"
+                        WHERE  IA."USER_ID"  = #{g_userId}
+                          AND  IB."USE_YN"   = '1' 
+                          AND  IB."AUTH_CL"  = '1' 
+                          AND  IC."USE_YN"   = '1' 
+    				 ) B ON A."PROG_CD" = B."PROG_CD"
+      		  WHERE  A."USE_YN"  = '1' 
+              GROUP BY   A."PROG_CD" 	    
+    	    UNION
+    	     SELECT NULL,
+      			    NULL 
+      		   FROM  "SYS_PROGRAM" A
+      		       JOIN (
+                       SELECT  DISTINCT "PROG_CD"
+                         FROM  "SYS_AUTH_USER"  IA JOIN 
+                               "SYS_AUTHORITY"  IB ON IA."AUTH_CD"  =IB."AUTH_CD"
+                               JOIN "SYS_AUTH_PROG"  IC ON IA."AUTH_CD"  =IC."AUTH_CD"
+                        WHERE  IA."USER_ID"  = #{g_userId}
+                          AND  IB."USE_YN"   = '1' 
+                          AND  IB."AUTH_CL"  = '1' 
+                          AND  IC."USE_YN"   = '1' 
+    				 ) B ON A."PROG_CD" = B."PROG_CD"
+      		  WHERE  A."USE_YN"  = '1' 
+    	     ) AA LEFT OUTER JOIN
+    	    "SYS_PROGRAM" BB ON AA."PROG_CD"   = BB."PROG_CD"
+    	   JOIN (
+    	      SELECT  "COMM_CD", "COMM_CD_NM", "LNUP_ORD", "CHARTR_REF1", "NUM_REF1"
+    	        FROM  "SYS_CODE" 
+    	       WHERE  "COMM_CL_CD" = 'GS001' 
+    	     ) CC ON AA."SYSTEM_CL" = CC."COMM_CD"
+      ORDER BY CC."LNUP_ORD", "PROGNO"  
+    </select>
+    <select id="getMenuListAppliedForAuthForSystemClTop" resultType="HMap">
+    	SELECT	/* [menuService.sqlx][menu.getMenuListAppliedForAuthForSystemClTop][TOP 메뉴 조회][shks][2012.07.01] */
+			A."SYSTEM_CL" AS "SYSTEMCL",
+			A."PROG_CD" AS "PROGCD",
+			A."PROG_NM" AS "PROGNM",
+       		A."PROG_NO" AS "PROGNO",
+       		A."PROG_LVL" AS "PROGLVL",
+       		A."PROG_URL" AS "PROGURL"
+		FROM	"SYS_PROGRAM" A
+		WHERE 	A."USE_YN" = '1'
+		AND   	A."MENU_YN" = '1'
+		AND   	A."SYSTEM_CL" = #{systemCl}
+   		AND  	A."PROG_LVL" in ('1', '2')	    	
+		AND   	A."PROG_CD" IN (
+	   				SELECT  "PROG_CD"
+	  				FROM  "SYS_AUTH_USER"  IA JOIN 
+	       			"SYS_AUTHORITY"  IB ON IA."AUTH_CD"  =IB."AUTH_CD"
+	       			JOIN "SYS_AUTH_PROG"  IC ON IA."AUTH_CD"  =IC."AUTH_CD" 
+					WHERE  IA."USER_ID"  = #{g_userId}
+					AND  IB."USE_YN"   = '1' 
+					AND  IB."AUTH_CL"  = '1' 
+					AND  IC."USE_YN"   = '1'
+		)
+		ORDER BY "PROG_NO"
+    </select>
+    <select id="getMenuListAppliedForAuthForSystemCl" resultType="HMap">
+	SELECT	/* [menuService.sqlx][menu.getMenuListAppliedForAuthForSystemCl][LEFT 메뉴 조회][김병욱][2012.03.12] */
+			A."SYSTEM_CL"                                  AS "SYSTEMCL",
+			A."PROG_CD" AS "PROGCD",
+			A."PROG_NM" AS "PROGNM",
+       		A."PROG_NO" AS "PROGNO",
+       		A."PROG_LVL" AS "PROGLVL",
+       		A."PROG_URL" AS "PROGURL"
+	FROM	"SYS_PROGRAM" A
+	WHERE 	A."USE_YN" = '1'
+	AND   	A."MENU_YN" = '1'
+	AND   	A."SYSTEM_CL" ='HTML'
+	<if test="progNo != null">        
+	AND A."PROG_NO" LIKE #{progNo} ||'%'    	
+    </if>
+    <if test="progLvl != null">        
+	AND  A."PROG_LVL" &gt;=CAST(#{progLvl} AS NUMERIC)    	
+    </if>
+	AND   	A."PROG_CD" IN (
+   				SELECT  "PROG_CD"
+  				FROM  "SYS_AUTH_USER"  IA JOIN 
+       			"SYS_AUTHORITY"  IB ON IA."AUTH_CD" = IB."AUTH_CD"
+       			JOIN "SYS_AUTH_PROG"  IC ON IA."AUTH_CD" = IC."AUTH_CD"
+				WHERE  IA."USER_ID"  = #{g_userId}
+				AND  IB."USE_YN"   = '1' 
+				AND  IB."AUTH_CL"  = '1' 
+				AND  IC."USE_YN"   = '1'
+	)
+	ORDER BY "PROG_NO"
+    </select>
+    <select id="getMenuListByFavorite" resultType="HMap"> 
+	 SELECT  /* [menuService.sqlx][menu.getMenuListByFavorite][즐겨찾기 메뉴 조회][김병욱][2012.03.12] */
+	 		 AA."SYSTEM_CL",
+			 AA."PROG_CD", 
+			 CASE WHEN BB."PROG_LVL" IS NULL THEN '1' ELSE BB."PROG_LVL"+1 END AS "PROG_LVL", 
+			 CASE WHEN BB."PROG_NO" IS NULL THEN '0' ELSE BB."PROG_NO" END AS "PROG_NO", 
+			 BB."PROG_NM" AS "PROG_NM",
+	   		 CC."LNUP_ORD" 
+	   FROM  ( 
+      		  SELECT  A."SYSTEM_CL",
+      			      A."PROG_CD" 
+      		    FROM  "SYS_PROGRAM" A
+      		        JOIN (
+      		        	SELECT  DISTINCT "PROG_CD"
+						FROM "SYS_AUTH_USER"  IA JOIN
+						     "SYS_AUTHORITY" IB ON IA."AUTH_CD" = IB."AUTH_CD" JOIN
+						     "SYS_AUTH_PROG" IC ON IA."AUTH_CD" = IC."AUTH_CD"
+						WHERE IA."USER_ID"  = #{g_userId}
+						AND  IB."USE_YN"   = '1' 
+						AND  IB."AUTH_CL"  = '1' 
+						AND  IC."USE_YN"   = '1' 
+    				  ) B ON A."PROG_CD" = B."PROG_CD"
+      		   WHERE  A."USE_YN"  = '1' 
+               GROUP BY  ROLLUP(A."SYSTEM_CL", A."PROG_CD") 
+    	     ) AA
+    	   LEFT OUTER JOIN "SYS_PROGRAM" BB ON AA."PROG_CD"   = BB."PROG_CD"
+    	   JOIN (
+    	      SELECT  "COMM_CD", "COMM_CD_NM", "LNUP_ORD"
+    	        FROM  "SYS_CODE" 
+    	       WHERE  "COMM_CL_CD" = 'GS001' 
+    	     ) CC ON AA."SYSTEM_CL" = CC."COMM_CD"
+      ORDER BY CC."LNUP_ORD", "PROG_NO"
+    </select>
+    <select id="getUserButtonPerm" resultType="HMap">
+		SELECT /* [menuService.sqlx][menu.getUserButtonPerm][Miplatform button 권한 조회][김병욱][2012.03.12] */
+		    "PROG_CD" AS "PROGCD",
+			COALESCE(MAX("SEARCH_YN"),'0') AS "SELBTNUSEYN" ,
+			COALESCE(MAX("NEW_YN"),'0') AS "NEWBTNUSEYN" ,
+			COALESCE(MAX("DELETE_YN"),'0') AS "DELBTNUSEYN" ,
+			COALESCE(MAX("SAVE_YN"),'0') AS "SAVBTNUSEYN" ,
+			COALESCE(MAX("PRINT_YN"),'0') AS "PRTBTNUSEYN" ,
+			COALESCE(MAX("BTN1_YN"),'0')  AS "BTN1USEYN" ,
+			COALESCE(MAX("BTN2_YN"),'0')  AS "BTN2USEYN" ,
+			COALESCE(MAX("BTN3_YN"),'0')  AS "BTN3USEYN" ,
+			COALESCE(MAX("BTN4_YN"),'0')  AS "BTN4USEYN" ,
+			COALESCE(MAX("BTN5_YN"),'0')  AS "BTN5USEYN" ,
+			COALESCE(MAX("BTN6_YN"),'0')  AS "BTN6USEYN" ,
+			COALESCE(MAX("BTN7_YN"),'0')  AS "BTN7USEYN" ,
+			COALESCE(MAX("BTN8_YN"),'0')  AS "BTN8USEYN" ,
+			COALESCE(MAX("BTN9_YN"),'0')  AS "BTN9USEYN" ,
+			COALESCE(MAX("BTN10_YN"),'0') AS "BTN10USEYN" 
+		FROM "SYS_AUTH_PROG" 
+		WHERE "AUTH_CD" IN (
+  			SELECT A."AUTH_CD"
+  			FROM  (SELECT * FROM "SYS_AUTHORITY" WHERE "USE_YN" = '1') A JOIN "SYS_AUTH_USER" B ON A."AUTH_CD" = B."AUTH_CD"
+  			WHERE B."USER_ID" = #{g_userId}
+		)AND "USE_YN" = '1'
+		GROUP BY "PROG_CD"
+   </select>
+   <!-- 사용처 없음 -->
+   <select id="getMenuListBySystemCl" resultType="HMap">
+		SELECT /* [menuService.sqlx][menu.getMenuListBySystemCl][시스템 구분별 메뉴 조회][김병욱][2012.03.12] */
+			A."PROG_CD",
+			TRIM(A."PROG_NM") AS "PROG_NM",
+			A."SYSTEM_CL",
+			A."PROG_LVL",
+			A."PROG_NO",
+			A."PROG_URL"
+		FROM "SYS_PROGRAM" A
+    	WHERE A."SYSTEM_CL" = #{system_cl}
+    	AND A."MENU_YN" = 1 
+    	AND A."USE_YN" = 1
+		ORDER BY A."PROG_NO"
+    </select>
+    <select id="getTotalMenuListByUserUrl" resultType="HMap">
+		SELECT /* [menuService.sqlx][menu.getTotalMenuListByUserUrl][바로가기 메뉴 조회][김병욱][2012.03.12] */
+			A."PROG_CD",
+			TRIM(A."PROG_NMv) AS "PROG_NM",
+			A."PROG_URL"
+		FROM "SYS_PROGRAM" A
+    	WHERE A."MENU_YN" = 1 
+    	AND A."USE_YN" = 1
+    </select>
+    <!-- 사용처 조회 안됨 -->
+    <update id="creTest" statementType="CALLABLE">
+		{call KO_DML_CRE_TEST( #{rtnVal,jdbcType=INTEGER,mode=OUT} )}		
+	</update>
+	<update id="dropTest" statementType="CALLABLE">
+		{call KO_DML_DROP_TEST( #{rtnVal,jdbcType=INTEGER,mode=OUT} )}		
+	</update>
+	<!-- 사용처 조회 안됨 -->
+    <select id="getPageNaviList" resultType="HMap">
+		SELECT /* [menuService.sqlx][menu.getPageNaviList][내비게이션 조회][김병욱][2012.03.12] */
+			A."PROG_CD",
+			TRIM(A."PROG_NM") AS "PROG_NM",
+			A."PROG_URL"
+		FROM "SYS_PROGRAM" A
+    	WHERE A."MENU_YN" = 1 
+    	AND A."PROG_CD" = #{prog_cd}
+    	AND A."USE_YN" = 1
+    </select>
+    <select id="getHTMLButtonPerm" resultType="HMap">
+    	SELECT  /* [menuService.sqlx][menu.getHTMLButtonPerm][HTML Button 권한 조회][김병욱][2012.03.12] */
+    			AA."PROGCD",
+				AA."SELBTNUSEYN" ,
+				AA."NEWBTNUSEYN" ,
+				AA."DELBTNUSEYN" ,
+				AA."SAVBTNUSEYN" ,
+				AA."PRTBTNUSEYN" ,
+				AA."BTN1USEYN" ,
+				AA."BTN2USEYN" ,
+				AA."BTN3USEYN" ,
+				AA."BTN4USEYN" ,
+				AA."BTN5USEYN" ,
+				AA."BTN6USEYN" ,
+				AA."BTN7USEYN" ,
+				AA."BTN8USEYN" ,
+				AA."BTN9USEYN" ,
+				AA."BTN10USEYN",
+				BB."BTN1_NM" AS "BTN1NM",
+				BB."BTN2_NM" AS "BTN2NM",
+				BB."BTN3_NM" AS "BTN3NM",
+				BB."BTN4_NM" AS "BTN4NM",
+				BB."BTN5_NM" AS "BTN5NM",
+				BB."BTN6_NM" AS "BTN6NM",
+				BB."BTN7_NM" AS "BTN7NM",
+				BB."BTN9_NM" AS "BTN9NM",
+				BB."BTN8_NM" AS "BTN8NM",
+				BB."BTN10_NM" AS "BTN10NM"
+		FROM  (
+			SELECT	"PROG_CD" AS "PROGCD",
+			        COALESCE(CAST("SEARCH_YN" AS TEXT),'0') AS "SELBTNUSEYN" ,
+			        COALESCE(CAST("NEW_YN" AS TEXT),'0') AS "NEWBTNUSEYN" ,
+			        COALESCE(CAST("DELETE_YN" AS TEXT),'0') AS "DELBTNUSEYN" ,
+			        COALESCE(CAST("SAVE_YN" AS TEXT),'0') AS "SAVBTNUSEYN" ,
+			        COALESCE(CAST("PRINT_YN" AS TEXT),'0') AS "PRTBTNUSEYN" ,
+			        COALESCE(CAST("BTN1_YN" AS TEXT),'0')  AS "BTN1USEYN" ,
+			        COALESCE(CAST("BTN2_YN" AS TEXT),'0')  AS "BTN2USEYN" ,
+			        COALESCE(CAST("BTN3_YN" AS TEXT),'0')  AS "BTN3USEYN" ,
+			        COALESCE(CAST("BTN4_YN" AS TEXT),'0')  AS "BTN4USEYN" ,
+			        COALESCE(CAST("BTN5_YN" AS TEXT),'0')  AS "BTN5USEYN" ,
+			        COALESCE(CAST("BTN6_YN" AS TEXT),'0')  AS "BTN6USEYN" ,
+			        COALESCE(CAST("BTN7_YN" AS TEXT),'0')  AS "BTN7USEYN" ,
+			        COALESCE(CAST("BTN8_YN" AS TEXT),'0')  AS "BTN8USEYN" ,
+			        COALESCE(CAST("BTN9_YN" AS TEXT),'0')  AS "BTN9USEYN" ,
+			        COALESCE(CAST("BTN10_YN" AS TEXT),'0') AS "BTN10USEYN"
+		  	FROM  	"SYS_AUTH_PROG" 
+		  	WHERE 	"PROG_CD" = #{prog_cd}
+		  	AND   	"USE_YN" = '1'
+		  	AND   	"AUTH_CD" IN (
+		          		SELECT	A."AUTH_CD" 
+		          		FROM  	"SYS_AUTHORITY"  A JOIN "SYS_AUTH_USER" B ON A."AUTH_CD" = B."AUTH_CD"
+		          		WHERE 	A."USE_YN" = '1'
+		          		AND   	B."USER_ID" = #{g_userId}
+		        )
+		)  AA JOIN "SYS_PROGRAM" BB ON AA."PROGCD" = BB."PROG_CD"
+   </select>   	
+</mapper>

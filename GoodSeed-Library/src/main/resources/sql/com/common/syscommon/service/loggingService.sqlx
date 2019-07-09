@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="logging">
+    <insert id="loggingError2DB">
+    	<selectKey keyProperty="excptNo" resultType="String" order="BEFORE">
+        	SELECT NEXTVAL('"SQ_SYS_STMEXCPT_HST"')
+       </selectKey>
+        INSERT /* [loggingService.sqlx][logging.loggingError2DB][20120102][최진영] */
+          INTO "SYS_STMEXCPT_HST"
+            ( "EXCPT_NO"
+            , "EXCPT_CNTS"
+            , "STACK_TRC"
+            , "OCCR_DY"
+            , "CLNT_ADDR"
+            , "SVR_ID"
+            , "CALL_URI"
+            , "REG_ID"
+            , "REG_DTM"
+            , "UPD_ID"
+            , "UPD_DTM")
+        VALUES
+            (
+              #{excptNo}
+            , SUBSTRING(CAST(#{excptCnts} AS TEXT), 1, 3999)
+            , SUBSTRING(CAST(#{stackTrc} AS TEXT), 1, 3999)
+            , TO_CHAR(NOW(), 'YYYYMMDD')
+            , #{clntAddr}
+            , #{svrId}
+            , #{callUri}
+            , '__SYSTEM'
+            , NOW()
+            , '__SYSTEM'
+            , NOW())
+    </insert>
+    
+    <insert id="saveServiceLog">
+        INSERT /* [loggingService.sqlx][logging.saveServiceLog][20120228][김병욱] */
+          INTO "SYS_SERVICE_LOG"
+            ("SEQ_NO"
+            , "SERVICE_BEAN_NAME"
+            , "METHOD_NAME"
+            , "REG_ID"
+            , "REG_DTM"
+            )
+        VALUES
+            (NEXTVAL('"SQ_SYS_SERVICE_LOG"')
+            , #{serviceBeanName}
+            , #{methodName}
+            , #{g_userId}
+            , NOW())
+    </insert>
+</mapper>

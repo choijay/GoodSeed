@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="eb13">
+
+	<!-- CMS 파일의 데이터 조회 -->
+	<select id="getCMSFileData" resultType="HMap">
+		SELECT	/* [eb13Service.sqlx][eb13.getCMSFileData][CMS 파일의 데이터 조회] */
+			A."CMS_FILE_NO",
+			A."FILE_TYPE",	
+			B."SEQ",
+			B."REQ_DT",
+			B."REQ_TYPE",
+			B."PAYER_NO",
+			SUBSTR(B."BANK_CD", 1, 3) AS "BANK_CD",
+			B."ACCOUNT_NO",
+			C."ACCOUNT_NM",
+			B."ACCOUNT_BIRTH" AS "ACCOUNT_BIRTH_ORIGIN",
+			CASE 
+				WHEN CHAR_LENGTH(B."ACCOUNT_BIRTH") = 8 
+				THEN SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 7, 2) 
+				ELSE SUBSTR(B."ACCOUNT_BIRTH", 1, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2)
+			END AS "ACCOUNT_BIRTH",
+			B."FILE_SEQ" AS "ATTACH_FILE_SEQ",
+			E."SOURCE_FILE_NM" AS "ATTACH_FILE_NM",
+			B."PAY_REQ_AMT",
+			B."RESULT_CD",
+			B."ERROR_CD",
+			B."PAY_TYPE",
+			C."CONT_NO",
+			C."REGULAR_PAY_DAY",
+			CASE WHEN A."FILE_TYPE" = 'EB21' THEN B."MONTH_PAY_AMT" ELSE C."MONTH_PAY_AMT" END AS "MONTH_PAY_AMT",
+			B."UNPAID_AMT",
+			B."NEXT_TEMP_PAY_AMT",
+			C."TOT_UNPAID_AMT",
+			CASE WHEN D."CUST_NM" = C."CONT_NM" THEN D."CUST_NM" ELSE D."CUST_NM" || '(' || C."CONT_NM" || ')' END AS "CUST_NM",
+			COALESCE(D."TEL", '') AS "TEL",
+			COALESCE(D."HP", '') AS "HP",
+			D."CUST_NO"
+	   	  FROM	"CMS_FILE" A
+	   	  		JOIN "CMS_FILE_DATA" B ON A."CMS_FILE_NO" = B."CMS_FILE_NO" AND A."PROCESS_DT" = B."PROCESS_DT"
+	   	  		LEFT OUTER JOIN "CONTRACT" C ON B."CONT_NO" = C."CONT_NO"
+	   	  		LEFT OUTER JOIN "CUSTOMER" D ON C."CUST_NO" = D."CUST_NO"
+	   	  		LEFT OUTER JOIN "ATTACH_FILES" E ON B."FILE_SEQ" = E."FILE_SEQ"
+		 WHERE 	A."CMS_FILE_NO" = #{CMS_FILE_NO}
+		 AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		 <if test='NEW_REQ_TYPE != null and NEW_REQ_TYPE == "Y"'>
+		 AND B."REQ_TYPE" = '1'
+		 </if>
+		 ORDER BY
+			<if test="sidx == null">
+				LPAD(B."SEQ", 5, '0') ASC
+			</if>
+			<if test='sidx != null and sidx !=""'>					    
+				<if test="sidx == &quot;SEQ&quot;">B."SEQ"</if>
+				<if test="sidx == &quot;PAYER_NO&quot;">B."PAYER_NO"</if>
+				<if test="sidx == &quot;CONT_NO&quot;">C."CONT_NO"</if>
+				<if test="sidx == &quot;REQ_TYPE&quot;">B."REQ_TYPE"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+				<if test="sord == &quot;desc&quot;">DESC</if>
+		  	</if>
+    </select>
+
+	<!-- 마지막 신청한 자료의 결과파일(eb14)가 반영되었는지 확인 -->
+	<select id="validateWithExistResultFile" resultType="string">
+		SELECT T1."APPLY_YN"		/* [eb13Service.sqlx][eb13.validateWithExistResultFile][jay][2017.01.06] */
+		FROM "CMS_FILE" T1,
+			(
+				SELECT
+					MAX("PROCESS_DT") AS "LAST_DATE"
+				FROM "CMS_FILE"
+				WHERE "FILE_TYPE" = #{FILE_TYPE}
+				AND "APPLY_YN" = '1'
+			) T2
+		WHERE T1."PROCESS_DT" = T2."LAST_DATE"
+		AND T1."FILE_TYPE" = 'EB14'
+	</select>
+	
+	<!-- 납부상태(PAY_STATUS_CD): 신규신청중(01), 해지신청중(07), 
+		 CMS승인상태(CMS_APPROVE_STATUS_CD): 신규신청(01), 해지신청(04) 완료된 건은 제외  -->
+	<select id="existsData" resultType="int">
+		SELECT SUM(T."CNT")
+		FROM (
+	        SELECT
+	        	COUNT(*) AS "CNT"
+	        FROM "CMS_PAYER" A
+	        WHERE A."CMS_APPROVE_STATUS_CD" = '03'
+	        UNION 
+			SELECT
+				COUNT(*) AS "CNT"
+			FROM "CONTRACT" A
+	        	JOIN "CUSTOMER" B ON A."CUST_NO" = B."CUST_NO"
+			WHERE A."PAY_STATUS_CD" IN ('01', '07')	
+	        AND (A."CMS_APPROVE_STATUS_CD" IS NULL OR A."CMS_APPROVE_STATUS_CD" in ('01', '03') )
+		) T
+	</select>
+
+	<insert id="insertEB13File">
+        INSERT  /* [cmsService.sqlx][cms.inserteCMSFile][CMS 파일 등록][jay][2016.12.27] */
+        INTO  "CMS_FILE"	
+        (
+			  "CMS_FILE_NO"
+			, "PROCESS_DT"
+			, "FILE_TYPE"
+			, "FILE_NAME"
+			, "FILE_PATH"
+			, "APPLY_YN"
+			, "REG_ID"
+			, "REG_DTM"
+        ) 
+        VALUES
+        ( 
+        	#{CMS_FILE_NO}
+			, #{PROCESS_DT}
+			, #{FILE_TYPE}
+			, #{CMS_FILE_NO}
+			, #{FILE_PATH}
+			, 0
+			, #{g_userId}
+			, NOW()
+		)
+	</insert>
+
+	<insert id="insertEB13FileData">
+        INSERT  /* [cmsService.sqlx][cms.inserteCMSData][ CMS Data 등록][jay][2016.12.28] */
+        INTO  "CMS_FILE_DATA"
+        (
+			  "CMS_FILE_NO"
+			, "PROCESS_DT"
+			, "SEQ"
+			, "REQ_DT"
+			, "REQ_TYPE"
+			, "PAYER_NO"
+			, "BANK_CD"
+			, "ACCOUNT_NO"
+			, "ACCOUNT_BIRTH"
+			, "BANK_BRANCH_CD"
+			, "HP"
+			, "FILE_SEQ"
+			, "RESULT_CD"
+			, "ERROR_CD"
+			, "PAY_TYPE"
+			, "CONT_NO"
+			, "REG_ID"
+			, "REG_DTM"
+        )
+        SELECT
+        	#{CMS_FILE_NO}
+        	, #{PROCESS_DT}
+        	, ROW_NUMBER() OVER(ORDER BY T."CONT_NO" ASC, T."PAY_STATUS_CD" DESC) AS SEQ
+        	, SUBSTR(TO_CHAR(NOW(), 'YYYYMMDD'), 3, 8)
+        	, T."PAY_STATUS_CD"
+        	, T."PAYER_NO"
+        	, T."BANK_CD"
+        	, T."ACCOUNT_NO"
+        	, SUBSTR(REPLACE(T."ACCOUNT_BIRTH", '-', ''), 3, 8)
+        	, ''
+        	, REPLACE(T."HP", '-', '') "HP"
+			, T."CMS_FILE_SEQ"
+			, ''
+			, ''
+			, ''
+			, T."CONT_NO"
+			, #{g_userId}
+			, NOW()
+        FROM
+        (
+	        SELECT
+	        	A."CONT_NO"
+	        	, '3' AS "PAY_STATUS_CD"
+	        	, C."PAYER_NO"
+	        	, C."BANK_CD"
+				, C."ACCOUNT_NO"
+				, C."ACCOUNT_BIRTH"
+				, B."HP" "HP"
+				, '' AS "CMS_FILE_SEQ"
+	        FROM "CONTRACT" A, "CUSTOMER" B, "CMS_PAYER" C 
+	        WHERE C."CMS_APPROVE_STATUS_CD" = '03'
+	        AND C."CONT_NO" = A."CONT_NO"
+	        AND A."CUST_NO" = B."CUST_NO"
+	        UNION
+	        SELECT
+	        	A."CONT_NO"
+	        	, CASE A."PAY_STATUS_CD" WHEN '01' THEN '1' WHEN '07' THEN '3' ELSE '7' END
+	        	, A."PAYER_NO"
+	        	, A."BANK_CD"
+				, A."ACCOUNT_NO"
+				, A."ACCOUNT_BIRTH"
+				, B."HP"
+				, A."CMS_FILE_SEQ"
+	        FROM "CONTRACT" A 
+	        	JOIN "CUSTOMER" B ON A."CUST_NO" = B."CUST_NO"
+	        WHERE A."PAY_STATUS_CD" IN ('01', '07')
+	        AND (A."CMS_APPROVE_STATUS_CD" IS NULL OR A."CMS_APPROVE_STATUS_CD" in ('01', '03'))
+        ) T
+        WHERE T."PAYER_NO" != ''
+	</insert>
+
+	<!-- REQ_TYPE- 1:신규, 3:해지
+		 CMS_APPROVE_STATUS_CD- 01:신규신청, 03:해지신청 -->
+	<update id="updateStatus">
+		UPDATE "CONTRACT" A
+		SET "CMS_APPROVE_STATUS_CD" = CASE B."REQ_TYPE" WHEN '1' THEN '01' WHEN '3' THEN '03' ELSE '' END
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		FROM "CMS_FILE_DATA" B
+		WHERE B."CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND B."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		AND B."PAYER_NO" = A."PAYER_NO"
+	</update>
+	
+	<!-- EB13 파일의 데이터 조회 (엑셀다운로드를 위한)-->
+	<select id="getCMSFileDataForExcel" resultType="HMap">
+		SELECT	/* [eb13Service.sqlx][eb13.getCMSFileDataForExcel][CMS 파일의 데이터 조회] */
+			A."CMS_FILE_NO",
+			A."FILE_TYPE",	
+			B."SEQ",
+			B."REQ_DT",
+			B."REQ_TYPE",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE X."COMM_CL_CD" ='GS033' AND X."COMM_CD" = B."REQ_TYPE") AS "REQ_TYPE_NM",
+			B."PAYER_NO",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE SUBSTR(B."BANK_CD", 1, 3) = X."COMM_CD" AND "COMM_CL_CD" = 'GS021') AS "BANK_NM", 
+			B."ACCOUNT_NO",
+			C."ACCOUNT_NM",
+			CASE 
+				WHEN CHAR_LENGTH(B."ACCOUNT_BIRTH") = 8 
+				THEN SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 7, 2) 
+				ELSE SUBSTR(B."ACCOUNT_BIRTH", 1, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2)
+			END AS "ACCOUNT_BIRTH",
+			B."FILE_SEQ" AS "ATTACH_FILE_SEQ",
+			E."UPLOADED_FILE_NM" AS "ATTACH_FILE_NM",
+			B."PAY_REQ_AMT",
+			B."RESULT_CD",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE B."ERROR_CD" = X."COMM_CD" AND "COMM_CL_CD" = 'GS032') AS "ERROR_NM",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE B."PAY_TYPE" = X."COMM_CD" AND "COMM_CL_CD" = 'GS033') AS "PAY_TYPE_NM",
+			C."CONT_NO",
+			C."REGULAR_PAY_DAY",
+			CAST(C."MONTH_PAY_AMT" AS INTEGER) AS "MONTH_PAY_AMT",
+			CASE WHEN D."CUST_NM" = C."CONT_NM" THEN D."CUST_NM" ELSE D."CUST_NM" || '(' || C."CONT_NM" || ')' END AS "CUST_NM",
+			B."HP"
+	   	  FROM	"CMS_FILE" A
+	   	  		JOIN "CMS_FILE_DATA" B ON A."CMS_FILE_NO" = B."CMS_FILE_NO" AND A."PROCESS_DT" = B."PROCESS_DT"
+	   	  	<if test="FILE_TYPE != null and FILE_TYPE == 'EB13'">
+	   	  		LEFT OUTER JOIN "CONTRACT" C ON B."CONT_NO" = C."CONT_NO"
+	   	  		LEFT OUTER JOIN "ATTACH_FILES" E ON B."FILE_SEQ" = E."FILE_SEQ"
+	   	  	</if>
+	   	  	<if test="FILE_TYPE != null and FILE_TYPE == 'EB14'">
+	   	  		JOIN "CMS_FILE_DATA" F ON F."CMS_FILE_NO" = REPLACE(#{CMS_FILE_NO}, 'EB14', 'EB13') AND F."PROCESS_DT" = B."PROCESS_DT" AND F."PAYER_NO" = B."PAYER_NO"
+	   	  		LEFT OUTER JOIN "CONTRACT" C ON F."CONT_NO" = C."CONT_NO"
+	   	  		LEFT OUTER JOIN "ATTACH_FILES" E ON F."FILE_SEQ" = E."FILE_SEQ"
+	   	  	</if>
+	   	  		LEFT OUTER JOIN "CUSTOMER" D ON C."CUST_NO" = D."CUST_NO"
+		 WHERE 	A."CMS_FILE_NO" = #{CMS_FILE_NO}
+		 AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		 ORDER BY
+			B."PAYER_NO"
+    </select>	
+</mapper>

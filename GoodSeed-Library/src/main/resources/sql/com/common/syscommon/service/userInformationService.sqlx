@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?><!--Converted at: Mon Feb 17 11:22:07 KST 2014-->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userInformation">
+	<insert id="insertUser">
+        INSERT  /* [userInformationService.sqlx][userInformation.insertUser][사용자 등록][김병욱][2012.02.06] */
+		INTO  "SYS_USER"
+        (
+            "USER_ID",
+            "USER_NM",
+            "PWD_NO",
+            "ADMIN_YN",
+            "USE_YN",
+            "RMK",
+            "FAIL_IN_CNT",
+            "FAIL_TOT_CNT",
+            "USER_STS_CD",
+            "TMP_PWD_YN",
+            "MAIL_ID",
+            "HANDPHONE_NO",
+			"REG_ID",
+			"REG_DTM",
+			"UPD_ID",
+			"UPD_DTM"
+        )
+        VALUES
+        (
+            #{USER_ID},
+            #{USER_NM},
+            #{PWD_NO},
+            #{ADMIN_YN},
+            #{USE_YN},
+            #{RMK},
+            0,
+            0,
+            '01',
+            '0',
+            #{MAIL_ID},
+            #{HANDPHONE_NO},
+            #{g_userId},
+            NOW(),
+            #{g_userId},
+            NOW()
+        )
+    </insert>
+	<select id="getUserDtlList" resultType="HMap">
+        SELECT  /* [userInformationService.sqlx][userInformation.getUserDtlList][사용자정보조회][김병욱] [2012.02.06] */
+	            "USER_ID",						/* 사용자 ID */
+	            "USER_NM",						/* 사용자명 */
+	            "USE_YN",						/* 사용여부 */
+	            "ADMIN_YN",						/* 관지라여부 */
+	            "RMK",							/* 비고 */
+	            "REG_ID",						/* 등록자ID */
+	            "UPD_ID",						/* 수정자ID */
+	            TO_CHAR("REG_DTM",'YYYY/MM/DD') AS "REG_DTM",	/* 등록일시 */
+	            TO_CHAR("UPD_DTM",'YYYY/MM/DD') AS "UPD_DTM",	/* 수정일시 */
+				"MAIL_ID",						/* 메일ID */
+				"HANDPHONE_NO",  				/* 핸드폰번호 */
+	            '0'  AS "INIT_YN"
+         FROM  	"SYS_USER"
+		WHERE   1=1
+        <if test="USER_ID != null and USER_ID !=''">            
+            AND "USER_ID" LIKE  '%' || #{USER_ID}||'%'            
+        </if>
+        <if test="USER_NM != null and USER_NM !=''">            
+            AND "USER_NM" LIKE  '%' || #{USER_NM}||'%'            
+        </if>
+        <if test="SEARCH_TYPE == 0">
+            AND "USE_YN" ='0'
+        </if>
+        <if test="SEARCH_TYPE == 1">
+            AND "USE_YN" ='1'
+        </if>
+        <!-- 그리드 sorting -->
+		<if test="sidx != null">
+			ORDER BY
+			<if test="sidx == &quot;USER_ID&quot;">"USER_ID"</if>
+			<if test="sidx == &quot;USER_NM&quot;">"USER_NM"</if>
+			<if test="sord == &quot;asc&quot;">ASC</if>
+		 	<if test="sord == &quot;desc&quot;">DESC</if>
+		</if> 	
+	  	
+		<!--// 그리드 sorting -->
+		<if test="sidx == null">
+			ORDER BY "USER_ID" ASC
+		</if>
+    </select>
+    
+    <insert id="insertUserAuthorityLog">
+        INSERT /* [userInformationService.sqlx][userInformation.insertUserAuthorityLog][김병욱][2012.02.06] */
+		INTO "SYS_USER_LOG"
+        (
+            "USER_ID",
+            "AUTH_CD",
+            "LOG_CL",
+            "PROG_CD",
+            "RMK",
+            "PWD_NO",
+            "IP_NO",
+			"REG_ID",
+			"REG_DTM",
+			"ALLOW_IP"
+        )
+        VALUES
+        (	#{g_userId},
+        	#{AUTH_CD},
+            #{LOG_CL},
+            #{PROG_CD},
+            #{RMK},
+            #{PWD_NO},
+            #{IP_ADDR},
+            #{g_userId},
+            NOW(),
+            #{ALLOW_IP}
+        )
+    </insert>
+    
+    <update id="updatePwd">
+        UPDATE  /* [userInformationService.sqlx][userInformation.updatePwd][김병욱][2012.02.06] */
+               "SYS_USER"
+		SET  	"PWD_CHG_DT"  = TO_CHAR(NOW(),'YYYYMMDD')
+              , "FAIL_IN_CNT" = 0
+              , "TMP_PWD_YN"  = '1'
+              , "PWD_NO"      = #{NEW_PWD}
+              , "USER_STS_CD" = #{USER_STS_CD}
+              , "UPD_DTM"     = NOW()
+              , "UPD_ID"      = #{g_userId}
+        WHERE  "USER_ID"      = #{USER_ID}
+    </update>
+    
+    <insert id="insertUserPwdChangeLog">
+        INSERT /* [userInformationService.sqlx][userInformation.insertUserPwdChangeLog][김병욱] */
+		INTO "SYS_USER_LOG"
+        (
+            "USER_ID",
+            "LOG_CL",
+            "RMK",
+            "PWD_NO",
+            "IP_NO",
+            "PWD_CHG_DTM",
+            "REG_ID",
+            "REG_DTM"
+        )
+        VALUES
+        (	#{USER_ID},
+            #{LOG_CL},
+            #{RMK},
+            #{PWD_NO},
+            #{IP_ADDR},
+            NOW(),
+            #{g_userId} ,
+            NOW()
+        )
+    </insert>
+    <update id="updateUser">
+        UPDATE  /* [userInformationService.sqlx][userInformation.updateUser][사용자 수정][김병욱][2012.02.06] */
+                "SYS_USER"
+		SET  "USER_NM"			= #{USER_NM}
+             , "ADMIN_YN"       	= #{ADMIN_YN}
+             , "USE_YN"         	= #{USE_YN}
+             , "RMK"            	= #{RMK}
+             , "MAIL_ID"			= #{MAIL_ID}
+             , "HANDPHONE_NO"		= #{HANDPHONE_NO}
+             , "UPD_DTM"         	= NOW()
+             , "UPD_ID"          	= #{g_userId}
+        WHERE  "USER_ID"        	= #{USER_ID}
+    </update>
+</mapper>

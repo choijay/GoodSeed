@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="customSelectService">    
+	<select id="getCustomSelectSample" resultType="HMap">
+		SELECT  /* [customSelectService.sqlx][customSelectService.getCustomSelectSample] */     
+              	'COMMON'			AS "NAME"
+              , 'COMMON'			AS "CODE"
+	      FROM  dual 
+		union all
+		SELECT  
+			  	'HTML'			AS "NAME"
+              , 'HTML'			AS "CODE"
+	      FROM  dual 
+	    union all
+	    SELECT  
+			  	'EXTJS'			AS "NAME"
+              , 'EXTJS'			AS "CODE"
+	      FROM  dual
+	     WHERE #{param1}=#{param2}		
+	</select>
+	
+	<select id="getProgramLvl1List" resultType="HMap">
+		SELECT  /* [customSelectService.sqlx][customSelectService.getProgramLvl1List] */     
+              	"PROG_NM"    				AS "NAME"
+              , "PROG_NO"					AS "CODE"
+              , "PROG_LVL"					AS "LVL"
+              , "PROG_CD"					AS "PROG_CD"
+              , "BTN1_NM"					AS "BTN1_NM"
+	      FROM  "SYS_PROGRAM" A 
+	     WHERE  "SYSTEM_CL" = #{param1}
+	     AND	"PROG_LVL" = '1'
+	 	 ORDER BY "PROG_NO" 
+	</select> 
+	
+	<select id="getProgramLvl2List" resultType="HMap">
+		SELECT  /* [customSelectService.sqlx][customSelectService.getProgramLvl2List] */     
+			 	 #{param1} 	AS "NAME"
+				,#{param1} 	AS "CODE"
+		FROM DUAL
+		union all
+		SELECT 	 #{param2} 	AS "NAME"
+				,#{param2} 	AS "CODE"
+		FROM DUAL
+		union all
+		SELECT  '00'		AS "NAME"
+              , '00'		AS "CODE"
+	      FROM  dual 
+	</select> 
+	
+	<select id="getImcList" resultType="HMap">
+		SELECT  /* [customSelectService.sqlx][customSelectService.IMCList] */     
+            IMC_NUM AS CODE,
+            IMC_LOCAL AS NAME,
+            IMC_CODE AS PROG_CD
+	      FROM  IMC
+	</select>
+		
+			<!-- 국가 코드 조회 -->
+	<select id="getCountryList" resultType="HMap">
+	SELECT  /* [customSelectService.sqlx][customSelectService.getCountryList] */     
+		COMM_CL_CD AS PROG_CD ,
+		COMM_CD  AS CODE,
+		COMM_CD_NM AS NAME 
+	FROM SYS_CODE
+	</select>
+	
+		
+	<!-- 기준화폐 조회 -->
+	<select id="getCountryUnitList" resultType="HMap">
+     SELECT  /* [customSelectService.sqlx][customSelectService.getCountryUnitList] */ 
+     	CURRENCY_CODE AS CODE,
+		CURRENCY_UNIT AS NAME
+     FROM CURRENCY
+	</select>
+</mapper>
+         

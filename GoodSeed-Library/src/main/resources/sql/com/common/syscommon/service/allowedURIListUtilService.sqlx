@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="allowedURIList">
+    <insert id="insertAllowedURIList">
+     INSERT /* [allowedURIListService.sqlx][allowedURIList.insertAllowedURIList][20140311][문혜영] */
+       INTO "SYS_ALLOWLIST"
+           ("GBN"
+           ,"ALLOW_LIST"
+           ,"REMARK"
+           ,"USE_YN"
+           ,"REG_ID"
+           ,"REG_DTM"
+           ,"UPD_ID"
+           ,"UPD_DTM"
+	       )
+	VALUES( #{GBN}
+		   ,#{ALLOW_LIST}
+		   ,#{REMARK}
+		   ,#{USE_YN}
+		   ,#{UPDR_ID}
+		   ,NOW()
+		   ,#{UPDR_ID}
+		   ,NOW()	
+		)	
+    </insert> 
+    <select id="getAllowedURIList" resultType="HMap">
+		SELECT  /* [allowedURIListService.sqlx][allowedURIList.getAllowedURIList][20140311][문혜영] */
+				"GBN"
+	           ,"ALLOW_LIST"
+	           ,"REMARK"
+	           ,"USE_YN"
+	           ,"REG_ID"
+	           ,TO_CHAR("REG_DTM", 'YYYY-MM-DD hh24:mi:ss') as "REG_DTM"
+               ,"UPD_ID"
+               ,TO_CHAR("UPD_DTM", 'YYYY-MM-DD hh24:mi:ss') as "UPD_DTM"
+	   	  FROM	"SYS_ALLOWLIST"
+	    <trim prefix="WHERE" prefixOverrides="AND |OR">
+			<if test='ALLOW_LIST !=null and ALLOW_LIST !=""'>
+			   AND "ALLOW_LIST" LIKE '%' || #{ALLOW_LIST} || '%'
+			</if>
+   			<if test='GBN !=null and GBN !=""'>
+   			   AND "GBN" = #{GBN}
+   			</if>
+   			<if test='USE_YN !=null and USE_YN !=""'>
+   			   AND "USE_YN" = #{USE_YN}
+   			</if>
+		</trim>
+    </select>
+    <select id="getBaseAllowedURIList" resultType="HMap">
+		SELECT  /* [allowedURIListService.sqlx][allowedURIList.getBaseAllowedURIList][20140311][문혜영] */
+				"GBN"
+	           ,"ALLOW_LIST"
+	           ,"REMARK"
+	           ,"USE_YN"
+	           ,"REG_ID"
+	           ,TO_CHAR("REG_DTM", 'YYYY-MM-DD hh24:mi:ss') as "REG_DTM"
+               ,"UPD_ID"
+               ,TO_CHAR("UPD_DTM", 'YYYY-MM-DD hh24:mi:ss') as "UPD_DTM"
+	   	  FROM	"SYS_ALLOWLIST"
+	   	  WHERE "GBN" ='A'
+	   	  AND   "USE_YN" = #{USE_YN}
+    </select> 
+    <select id="getUserAllowedURIList" resultType="HMap">
+		SELECT  /* [allowedURIListService.sqlx][allowedURIList.getUserAllowedURIList][20140311][문혜영] */
+				"GBN"
+	           ,"ALLOW_LIST"
+	           ,"REMARK"
+	           ,"USE_YN"
+	           ,"REG_ID"
+	           ,TO_CHAR("REG_DTM", 'YYYY-MM-DD hh24:mi:ss') as "REG_DTM"
+               ,"UPD_ID"
+               ,TO_CHAR("UPD_DTM", 'YYYY-MM-DD hh24:mi:ss') as "UPD_DTM"
+	   	  FROM	"SYS_ALLOWLIST"
+	   	  WHERE "GBN" ='B'
+	   	  AND "USE_YN" = #{USE_YN}
+    </select>  
+     <select id="getMaxUdt" resultType="string">
+     	SELECT  /* [allowedURIListService.sqlx][allowedURIList.getMaxUdt][20140311][문혜영] */
+     	        MAX(TO_CHAR("UPD_DTM", 'YYYYMMDDhh24miss')) as "UPD_DTM"
+     	  FROM	"SYS_ALLOWLIST"
+     </select>    
+    <update id="updateAllowedURIList">
+		UPDATE  /* [allowedURIListService.sqlx][allowedURIList.updateAllowedURIList][20140311][문혜영] */
+				"SYS_ALLOWLIST"
+		SET		"GBN"     		= #{GBN}
+		  		, "ALLOW_LIST" 	= #{ALLOW_LIST}
+		  		, "REMARK"		= #{REMARK}
+		  		, "USE_YN"       = #{USE_YN}
+		  		, "UPD_ID"		= #{UPDR_ID}
+		  		, "UPD_DTM"		= NOW()	
+         WHERE  "GBN" 	   = #{GBN}
+         AND  "ALLOW_LIST"   = #{ALLOW_LIST}
+    </update>
+    <delete id="deleteAllowedURIList">
+		DELETE 	/* [allowedURIListService.sqlx][allowedURIList.deleteAllowedURIList][20140311][문혜영] */
+    	FROM  "SYS_ALLOWLIST"
+    	WHERE "GBN"	       = #{GBN}
+         AND  "ALLOW_LIST"   = #{ALLOW_LIST}
+    </delete> 
+</mapper>

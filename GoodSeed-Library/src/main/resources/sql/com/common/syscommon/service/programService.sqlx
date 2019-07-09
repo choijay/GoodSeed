@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="program">
+	<!-- 프로그램정보 조회 -->
+	<select id="getProgramList" resultType="HMap">
+		SELECT  /* [ProgramService.sqlx][program.getProgramList][프로그램정보 조회][HHJ][2012.02.03] */
+		        "PROG_CD"     
+              , "PROG_NM"      
+              , "SYSTEM_CL"   
+              , "PROG_LVL"     
+              , "PROG_NO"      
+              , "PROG_URL"     
+              , "MENU_YN"   
+              , "TOPMENU_YN"
+              , "BTN1_NM"      
+              , "BTN2_NM"      
+              , "BTN3_NM"      
+              , "BTN4_NM"      
+              , "BTN5_NM"      
+              , "BTN6_NM"      
+              , "BTN7_NM"      
+              , "BTN8_NM"      
+              , "BTN9_NM"      
+              , "BTN10_NM"       
+              , "USE_YN" 
+	      FROM  "SYS_PROGRAM" A 
+	     WHERE  "SYSTEM_CL" = #{SYSTEM_CL} 
+	 	 ORDER BY "PROG_NO" 
+	</select>    
+	<!-- 프로그램정보 등록 -->
+	<insert id="insertProgram"> 
+		INSERT  /* [ProgramService.sqlx][program.insertProgram][프로그램정보 등록][HHJ][2012.02.03] */
+		  INTO  "SYS_PROGRAM"
+            (   "PROG_CD"      
+              , "PROG_NM"      
+              , "SYSTEM_CL"    
+              , "PROG_LVL"     
+              , "PROG_NO"      
+              , "PROG_URL"     
+              , "MENU_YN"    
+              , "TOPMENU_YN"    
+              , "BTN1_NM"      
+              , "BTN2_NM"      
+              , "BTN3_NM"      
+              , "BTN4_NM"      
+              , "BTN5_NM"      
+              , "BTN6_NM"      
+              , "BTN7_NM"      
+              , "BTN8_NM"      
+              , "BTN9_NM"      
+              , "BTN10_NM"    
+              , "USE_YN"      
+              , "REG_ID"       
+              , "REG_DTM"      
+              , "UPD_ID"       
+              , "UPD_DTM"      
+			 )
+	    VALUES
+			 (	#{PROG_CD}      
+              , #{PROG_NM}      
+              , #{SYSTEM_CL}    
+              , CAST(#{PROG_LVL} AS NUMERIC)     
+              , #{PROG_NO}      
+              , #{PROG_URL}     
+              , #{MENU_YN}    
+              , #{TOPMENU_YN}  
+              , #{BTN1_NM}      
+              , #{BTN2_NM}      
+              , #{BTN3_NM}      
+              , #{BTN4_NM}      
+              , #{BTN5_NM}      
+              , #{BTN6_NM}      
+              , #{BTN7_NM}      
+              , #{BTN8_NM}      
+              , #{BTN9_NM}      
+              , #{BTN10_NM}    
+              , #{USE_YN} 
+			  ,	#{g_userId}
+			  ,	NOW()
+			  ,	#{g_userId}
+			  ,	NOW()
+			 )
+	</insert>
+	<!-- 프로그램정보 수정 -->
+	<update id="updateProgram">
+		UPDATE  /*[ProgramService.sqlx][program.updateProgram][프로그램정보 등록][HHJ][2012.02.03]*/
+		       	"SYS_PROGRAM"       
+		   SET  "PROG_NM"      = #{PROG_NM}      
+              , "PROG_LVL"     = CAST(#{PROG_LVL} AS NUMERIC)     
+              , "PROG_NO"      = #{PROG_NO}      
+              , "PROG_URL"     = #{PROG_URL}     
+              , "MENU_YN"      = #{MENU_YN}  
+              , "TOPMENU_YN"   = #{TOPMENU_YN}      
+              , "BTN1_NM"      = #{BTN1_NM}      
+              , "BTN2_NM"      = #{BTN2_NM}      
+              , "BTN3_NM"      = #{BTN3_NM}      
+              , "BTN4_NM"      = #{BTN4_NM}      
+              , "BTN5_NM"      = #{BTN5_NM}      
+              , "BTN6_NM"      = #{BTN6_NM}      
+              , "BTN7_NM"      = #{BTN7_NM}      
+              , "BTN8_NM"      = #{BTN8_NM}      
+              , "BTN9_NM"      = #{BTN9_NM}      
+              , "BTN10_NM"     = #{BTN10_NM} 
+              , "USE_YN"       = #{USE_YN}
+	          ,	"UPD_ID"	     = #{g_userId} 
+	          ,	"UPD_DTM"      = NOW() 
+         WHERE  "PROG_CD"      = #{PROG_CD}
+    </update>	 
+    <!-- 프로그램 등록시 프로그램 다국어 자동 생성 -->
+    <insert id="insertAutoProgramMultilingual">
+		INSERT	/* [ProgramService.sqlx][program.insertAutoProgramMultilingual][프로그램 다국어 자동 생성][강정현][2013.04.30] */
+		  INTO	"SYS_PROGRAM_LANGUAGE"(
+		  		  "SYSTEM_CL"
+              	, "PROG_CD"
+			  	, "LANG_CL"
+			  	, "PROG_NM"
+			  	, "REG_ID"
+			  	, "REG_DTM"
+			  	, "UPD_ID"
+			  	, "UPD_DTM"	  
+		)
+		SELECT	#{SYSTEM_CL}						/* 시스템 구분 */
+			  	, #{PROG_CD}						/* 프로그램 코드 */
+			  	, "COMM_CD"						/* 다국어 공통그룹명 */   
+              	, #{PROG_NM}  		   			/* 언어구분 */  
+              	, #{g_userId}
+              	, NOW()
+              	, #{g_userId}
+              	, NOW()           	
+		  FROM	"SYS_CODE"
+		 WHERE "COMM_CL_CD" = 'GS008'
+    </insert>    
+    <!-- 프로그램 다국어정보 조회 (HTML용) -->
+	<select id="getHtmlProgramList" resultType="HMap">
+		SELECT	/* [ProgramService.sqlx][program.getHtmlProgramList][프로그램 다국어정보 조회 (HTML용)][강정현][2013.05.06] */
+				a."SYSTEM_CL"	
+              	, a."PROG_CD"
+              	, a."PROG_NM"
+              	, a."PROG_NO"
+		<foreach collection="codeList" item="item" separator="," open=",">
+        		max(CASE WHEN b."LANG_CL" = #{item} THEN b."PROG_NM" ELSE '' END) as ${item}
+       	</foreach>
+          FROM 	"SYS_PROGRAM" a join "SYS_PROGRAM_LANGUAGE" b
+            ON 	(a."SYSTEM_CL" = b."SYSTEM_CL" and a."PROG_CD" = b."PROG_CD")
+         WHERE	a."SYSTEM_CL" = #{SYSTEM_CL}	/* 시스템 구분 */
+           AND	a."USE_YN" = '1'
+         GROUP	BY a."SYSTEM_CL", a."PROG_CD", a."PROG_NM", a."PROG_NO"
+         
+        <!-- 그리드 sorting -->
+		<if test="sidx != null">  						    
+			ORDER BY
+			<if test="sidx == &quot;PROG_NO&quot;">a."PROG_NO"</if>
+			<if test="sidx == &quot;PROG_CD&quot;">a."PROG_CD"</if>
+			<if test="sidx == &quot;PROG_NM&quot;">a."PROG_NM"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>				    						    
+		<!--// 그리드 sorting -->
+	</select>	
+	<!-- 프로그램 다국어 정보 조회 -->
+	<select id="getProgramMultilinguaList" resultType="HMap">
+		SELECT  /* [ProgramService.sqlx][program.getProgramMultilinguaList][프로그램 다국어정보 조회][강정현][2013.04.09] */
+			  	  BB2."PROG_CD"
+            	, BB2."PROG_NM"
+	            , BB2."SYSTEM_CL"
+	            , BB2."PROG_LVL"
+	            , BB2."PROG_NO"
+	            , BB2."COMM_CD" AS "LANG_CL_CD"
+	            , BB2."COMM_CD_NM" AS "LANG_CL_NM"            
+				, AA2."PROG_NM" AS "LANG_VALUE"
+	        	, BB2."LNUP_ORD"
+		  FROM	(
+		  			SELECT	AAA.*
+		  			  FROM	"SYS_PROGRAM_LANGUAGE" AAA
+		  			  JOIN	"SYS_PROGRAM" AAB
+		  			 	ON	AAA."PROG_CD" = AAB."PROG_CD"
+		  			 WHERE	AAB."USE_YN" = '1'
+		  		) AA2
+      	  JOIN	(
+ 					SELECT	*
+ 			  		  FROM	"SYS_PROGRAM" B
+                CROSS JOIN 	(
+                				SELECT	T1."COMM_CD",
+                        				T2."COMM_CD_NM",
+                       					T1."LNUP_ORD"             
+                      			  FROM	(
+                   							SELECT	BB."COMM_CD",
+                        							BB."COMM_CD_NM",
+                        							BB."LNUP_ORD"            
+                   							  FROM	"SYS_CL_CODE" AA JOIN  "SYS_CODE" BB  ON AA."COMM_CL_CD" = BB."COMM_CL_CD"         
+                    						 WHERE	AA."COMM_CL_CD" = 'GS008'
+                    						   AND	AA."USE_YN" = '1'
+                    						   AND	BB."USE_YN" = '1'
+                        				) T1 JOIN "SYS_CODE_LANGUAGE" T2 ON T1."COMM_CD" = T2."COMM_CD"
+                        		 WHERE	T2."LANG_CL" = #{g_lang} 
+  							) A
+           		)BB2
+		 	ON	AA2."PROG_CD" = BB2."PROG_CD" AND AA2."LANG_CL" = BB2."COMM_CD"
+		 WHERE	BB2."SYSTEM_CL" = #{SYSTEM_CL}
+		   AND	BB2."USE_YN" = '1'	/* 사용여부가 'Y'인 데이터만 */
+	</select>
+	
+	<!-- 프로그램 사용자버튼 다국어 정보 조회 (HTML용) -->
+	<select id="getHtmlProgramBtnList" resultType="HMap">
+		SELECT 	/* [ProgramService.sqlx][program.getHtmlProgramBtnList][프로그램 사용자버튼 다국어 정보 조회 (HTML용)][강정현][2013.05.06] */
+				AA.* 
+		  FROM 	(
+					SELECT 	A."SYSTEM_CL"
+			              	, A."PROG_CD"
+			              	, B."BTN_TYPE_CD"
+							, B."BTN_TYPE_NM"
+			              	, CASE B."BTN_TYPE_CD" WHEN 'BTN1_NM' THEN MAX(A."BTN1_NM")
+			                           WHEN 'BTN2_NM' THEN MAX(A."BTN2_NM")
+			                           WHEN 'BTN3_NM' THEN MAX(A."BTN3_NM")
+			                           WHEN 'BTN4_NM' THEN MAX(A."BTN4_NM")
+			                           WHEN 'BTN5_NM' THEN MAX(A."BTN5_NM")
+			                           WHEN 'BTN6_NM' THEN MAX(A."BTN6_NM")
+			                           WHEN 'BTN7_NM' THEN MAX(A."BTN7_NM")
+			                           WHEN 'BTN8_NM' THEN MAX(A."BTN8_NM")
+			                           WHEN 'BTN9_NM' THEN MAX(A."BTN9_NM")
+			                           WHEN 'BTN10_NM' THEN MAX(A."BTN10_NM")
+							  ELSE '' END "BTN_DEF_VALUE"
+							, B."TNO"
+			              	<foreach collection="codeList" item="item" separator="," open=",">
+			        			MAX(CASE B."LANG_CL" WHEN #{item} THEN B."BTN_LANG_VALUE" ELSE '' END) AS  ${item}
+			       			</foreach>
+			          FROM 	"SYS_PROGRAM" A 
+			          JOIN	(
+			         			SELECT	AA."SYSTEM_CL"	/* 시스템 구분 */
+			               				, AA."PROG_CD"	/* 프로그램 코드 */
+			               				, AA."PROG_NM"
+			                			, AA."LANG_CL"
+			                			, "TNO"
+			                   			, CASE "TNO" WHEN 1 THEN 'BTN1_NM' 
+				                     	   		   WHEN 2 THEN 'BTN2_NM'
+				                     	   		   WHEN 3 THEN 'BTN3_NM'
+					                     	       WHEN 4 THEN 'BTN4_NM'
+					                     	       WHEN 5 THEN 'BTN5_NM'
+					                     	       WHEN 6 THEN 'BTN6_NM'
+					                     	       WHEN 7 THEN 'BTN7_NM'
+					                     	       WHEN 8 THEN 'BTN8_NM'
+					                     	       WHEN 9 THEN 'BTN9_NM'
+					                     	       WHEN 10 THEN 'BTN10_NM'
+										  ELSE '' END "BTN_TYPE_CD"
+			                			, CASE "TNO" WHEN 1 THEN '사용자버튼1' 
+				                           		   WHEN 2 THEN '사용자버튼2'
+						                           WHEN 3 THEN '사용자버튼3'
+						                           WHEN 4 THEN '사용자버튼4'
+						                           WHEN 5 THEN '사용자버튼5'
+						                           WHEN 6 THEN '사용자버튼6'
+						                           WHEN 7 THEN '사용자버튼7'
+						                           WHEN 8 THEN '사용자버튼8'
+						                           WHEN 9 THEN '사용자버튼9'
+						                           WHEN 10 THEN '사용자버튼10'
+										  ELSE '' END "BTN_TYPE_NM"
+			                  			, CASE "TNO" WHEN 1 THEN AA."BTN1_NM"
+					                               WHEN 2 THEN AA."BTN2_NM"
+					                               WHEN 3 THEN AA."BTN3_NM"
+					                               WHEN 4 THEN AA."BTN4_NM"
+					                               WHEN 5 THEN AA."BTN5_NM"
+					                               WHEN 6 THEN AA."BTN6_NM"
+					                               WHEN 7 THEN AA."BTN7_NM"
+					                               WHEN 8 THEN AA."BTN8_NM"
+					                               WHEN 9 THEN AA."BTN9_NM"
+					                               WHEN 10 THEN AA."BTN10_NM"
+					                               ELSE '' END "BTN_LANG_VALUE"
+			        		  FROM	"SYS_PROGRAM_LANGUAGE" AA
+			        	CROSS JOIN	(
+			        					SELECT (K."ROWNUM") AS "TNO" FROM 
+										(SELECT ROW_NUMBER() OVER (ORDER BY "SYSTEM_CL" DESC) AS "ROWNUM"
+										FROM "SYS_PROGRAM_LANGUAGE") K
+										WHERE K."ROWNUM" &lt;= 10 ) C
+				         			) B
+			          			ON	(A."SYSTEM_CL" = B."SYSTEM_CL" AND A."PROG_CD" = B."PROG_CD")
+			        		 WHERE 	A."SYSTEM_CL" = #{SYSTEM_CL}	/* 시스템 구분 */
+			        		   AND	A."PROG_CD" = #{PROG_CD}		/* 프로그램 코드 */
+			        		 GROUP	BY A."SYSTEM_CL", A."PROG_CD", "TNO", B."BTN_TYPE_CD", B."BTN_TYPE_NM"
+				) AA		
+		<!-- 그리드 sorting -->
+		<if test="sidx != null">  						    
+			ORDER BY 
+			<if test="sidx == &quot;BTN_TYPE_NM&quot;">AA."BTN_TYPE_NM"</if>
+			<if test="sidx == &quot;BTN_DEF_VALUE&quot;">AA."BTN_DEF_VALUE"</if>
+			<if test="sidx == &quot;TNO&quot;">AA."TNO"</if>		 	
+				<if test="sord == &quot;asc&quot;">ASC</if>
+		 		<if test="sord == &quot;desc&quot;">DESC</if>		 	
+	  	</if>
+	</select>	
+	<!-- 프로그램 사용자버튼 다국어 정보 조회 -->
+	<select id="getProgramBtnList" resultType="HMap">
+		WITH AA2 AS (	/*[ProgramService.sqlx][program.getProgramBtnList][프로그램 사용자 버튼 다국어정보 조회][강정현][2013.04.09]*/
+			SELECT  A."PROG_CD"
+                   	, A."PROG_NM"
+                   	, A."LANG_CL"
+                   	, CASE "TNO" WHEN 1 THEN 'BTN1_NM' 
+	                     	   WHEN 2 THEN 'BTN2_NM'
+	                     	   WHEN 3 THEN 'BTN3_NM'
+	                     	   WHEN 4 THEN 'BTN4_NM'
+	                     	   WHEN 5 THEN 'BTN5_NM'
+	                     	   WHEN 6 THEN 'BTN6_NM'
+	                     	   WHEN 7 THEN 'BTN7_NM'
+	                     	   WHEN 8 THEN 'BTN8_NM'
+	                     	   WHEN 9 THEN 'BTN9_NM'
+	                     	   WHEN 10 THEN 'BTN10_NM'
+	              			   ELSE '' END "BTN_TYPE_CD"
+                	, CASE "TNO" WHEN 1 THEN '사용자버튼1' 
+	                           WHEN 2 THEN '사용자버튼2'
+	                           WHEN 3 THEN '사용자버튼3'
+	                           WHEN 4 THEN '사용자버튼4'
+	                           WHEN 5 THEN '사용자버튼5'
+	                           WHEN 6 THEN '사용자버튼6'
+	                           WHEN 7 THEN '사용자버튼7'
+	                           WHEN 8 THEN '사용자버튼8'
+	                           WHEN 9 THEN '사용자버튼9'
+	                           WHEN 10 THEN '사용자버튼10'
+                         	   ELSE '' END "BTN_TYPE_NM"
+                  	, CASE "TNO" WHEN 1 THEN A."BTN1_NM"
+                               WHEN 2 THEN A."BTN2_NM"
+                               WHEN 3 THEN A."BTN3_NM"
+                               WHEN 4 THEN A."BTN4_NM"
+                               WHEN 5 THEN A."BTN5_NM"
+                               WHEN 6 THEN A."BTN6_NM"
+                               WHEN 7 THEN A."BTN7_NM"
+                               WHEN 8 THEN A."BTN8_NM"
+                               WHEN 9 THEN A."BTN9_NM"
+                               WHEN 10 THEN A."BTN10_NM"
+                               ELSE '' END "BTN_LANG_VALUE"
+			  FROM	(
+                    	SELECT	* 
+                    	  FROM	"SYS_PROGRAM_LANGUAGE"
+                    CROSS JOIN	(
+                    				SELECT K."ROWNUM" AS "TNO" FROM 
+										(SELECT ROW_NUMBER() OVER (ORDER BY "SYSTEM_CL" DESC) AS "ROWNUM"
+										FROM "SYS_PROGRAM_LANGUAGE") K
+										WHERE K."ROWNUM" &lt; 10
+                    			) C
+                    ) A
+		)
+ 		, BB2 AS (
+ 			SELECT *
+ 			  FROM	(
+						SELECT "TNO"
+								, B."PROG_CD"
+                  				, B."PROG_NM"
+                  				, B."SYSTEM_CL" 
+                  				, CASE "TNO" WHEN 1 THEN 'BTN1_NM' 
+				                     	   WHEN 2 THEN 'BTN2_NM'
+				                     	   WHEN 3 THEN 'BTN3_NM'
+				                     	   WHEN 4 THEN 'BTN4_NM'
+				                     	   WHEN 5 THEN 'BTN5_NM'
+				                     	   WHEN 6 THEN 'BTN6_NM'
+				                     	   WHEN 7 THEN 'BTN7_NM'
+				                     	   WHEN 8 THEN 'BTN8_NM'
+				                     	   WHEN 9 THEN 'BTN9_NM'
+				                     	   WHEN 10 THEN 'BTN10_NM'
+				              			   ELSE '' END "BTN_TYPE_CD"
+          						, CASE "TNO" WHEN 1 THEN '사용자버튼1' 
+				                     	   WHEN 2 THEN '사용자버튼2'
+				                     	   WHEN 3 THEN '사용자버튼3'
+				                           WHEN 4 THEN '사용자버튼4'
+				                     	   WHEN 5 THEN '사용자버튼5'
+				                     	   WHEN 6 THEN '사용자버튼6'
+				                     	   WHEN 7 THEN '사용자버튼7'
+				                     	   WHEN 8 THEN '사용자버튼8'
+				                     	   WHEN 9 THEN '사용자버튼9'
+				                     	   WHEN 10 THEN '사용자버튼10'
+				              			   ELSE '' END "BTN_TYPE_NM"
+          						, CASE "TNO" WHEN 1 THEN B."BTN1_NM"
+ 										   WHEN 2 THEN B."BTN2_NM"
+						                   WHEN 3 THEN B."BTN3_NM"
+						                   WHEN 4 THEN B."BTN4_NM"
+						                   WHEN 5 THEN B."BTN5_NM"
+						                   WHEN 6 THEN B."BTN6_NM"
+						                   WHEN 7 THEN B."BTN7_NM"
+						                   WHEN 8 THEN B."BTN8_NM"
+						                   WHEN 9 THEN B."BTN9_NM"
+						                   WHEN 10 THEN B."BTN10_NM"
+										   ELSE '' END "BTN_DEF_VALUE"
+						  FROM	(
+    								SELECT *
+    								  FROM	"SYS_PROGRAM" C
+                      			CROSS JOIN 	(
+                      							SELECT K."ROWNUM" AS "TNO" FROM 
+												(SELECT ROW_NUMBER() OVER (ORDER BY "SYSTEM_CL" DESC) AS "ROWNUM"
+												FROM "SYS_PROGRAM_LANGUAGE") K
+												WHERE K."ROWNUM" &lt; 10
+                      						) D
+								)B
+						 ORDER	BY B."TNO"
+  					) CC
+  		CROSS JOIN	(
+			   			SELECT T1."COMM_CD"
+								, T2."COMM_CD_NM"
+								, T1."LNUP_ORD" 
+						  FROM	(
+						  			SELECT  "COMM_CD" 
+											, "COMM_CD_NM"
+											, B."LNUP_ORD"
+						  			  FROM  "SYS_CL_CODE" A
+						  			  JOIN	"SYS_CODE" B 
+						 			 	ON	A."COMM_CL_CD" = B."COMM_CL_CD"
+						   			 WHERE	A."COMM_CL_CD" = 'GS008'
+                					   AND 	A."USE_YN" = '1'
+                					   AND 	B."USE_YN" ='1'
+                				) T1 JOIN "SYS_CODE_LANGUAGE" T2 ON T1."COMM_CD" = T2."COMM_CD" 
+              			 WHERE	T2."LANG_CL" = #{g_lang}
+  					) DD
+		)
+
+		SELECT	BB2.*
+				, AA2."BTN_LANG_VALUE"
+		  FROM	AA2
+		  JOIN	BB2
+		 	ON	AA2."PROG_CD" = BB2."PROG_CD"	AND	AA2."BTN_TYPE_CD" = BB2."BTN_TYPE_CD"
+		  									AND	AA2."LANG_CL" = BB2."COMM_CD"
+		 WHERE	BB2."SYSTEM_CL" = #{SYSTEM_CL}
+		   AND  BB2."PROG_CD" = #{PROG_CD}
+		
+		UNION
+
+		SELECT TTB."TNO"
+  				, TTA."PROG_CD"
+				, TTA."PROG_NM"
+				, TTA."SYSTEM_CL"
+  				, CASE "TNO" WHEN 1 THEN 'BTN1_NM' 
+                     	   WHEN 2 THEN 'BTN2_NM'
+                     	   WHEN 3 THEN 'BTN3_NM'
+                     	   WHEN 4 THEN 'BTN4_NM'
+                     	   WHEN 5 THEN 'BTN5_NM'
+                     	   WHEN 6 THEN 'BTN6_NM'
+                     	   WHEN 7 THEN 'BTN7_NM'
+                     	   WHEN 8 THEN 'BTN8_NM'
+                     	   WHEN 9 THEN 'BTN9_NM'
+                     	   WHEN 10 THEN 'BTN10_NM'
+              			   ELSE '' END "BTN_TYPE_CD"
+          		, CASE "TNO" WHEN 1 THEN '사용자버튼1' 
+                     	   WHEN 2 THEN '사용자버튼2'
+                     	   WHEN 3 THEN '사용자버튼3'
+                           WHEN 4 THEN '사용자버튼4'
+                     	   WHEN 5 THEN '사용자버튼5'
+                     	   WHEN 6 THEN '사용자버튼6'
+                     	   WHEN 7 THEN '사용자버튼7'
+                     	   WHEN 8 THEN '사용자버튼8'
+                     	   WHEN 9 THEN '사용자버튼9'
+                     	   WHEN 10 THEN '사용자버튼10'
+              			   ELSE '' END "BTN_TYPE_NM"
+               	, CASE "TNO" WHEN 1 THEN TTA."BTN1_NM"
+						   WHEN 2 THEN TTA."BTN2_NM"
+		                   WHEN 3 THEN TTA."BTN3_NM"
+		                   WHEN 4 THEN TTA."BTN4_NM"
+		                   WHEN 5 THEN TTA."BTN5_NM"
+		                   WHEN 6 THEN TTA."BTN6_NM"
+		                   WHEN 7 THEN TTA."BTN7_NM"
+		                   WHEN 8 THEN TTA."BTN8_NM"
+		                   WHEN 9 THEN TTA."BTN9_NM"
+		                   WHEN 10 THEN TTA."BTN10_NM"
+						   ELSE '' END "BTN_DEF_VALUE"
+              	, TTA."LANG_CL_CODE" AS "COMM_CD"
+              	, TTA."LANG_CL_NM" AS "COMM_CD_NM"
+              	, TTA."LNUP_ORD"
+              	, '' AS "BTN_LANG_VALUE"
+		  FROM	(
+		  			SELECT T2.*
+							, T3."COMM_CD" AS "LANG_CL_CODE"
+							, T3."COMM_CD_NM" AS "LANG_CL_NM"
+							, T3."LNUP_ORD"
+       				  FROM	"SYS_PROGRAM" T2
+                CROSS JOIN	(	
+              					SELECT T1."COMM_CD"
+										, T2."COMM_CD_NM"
+										, T1."LNUP_ORD"
+								  FROM 	(
+								  			SELECT  "COMM_CD"
+      												, "COMM_CD_NM"
+													, B."LNUP_ORD"
+								  			  FROM  "SYS_CL_CODE" A
+								  			  JOIN	"SYS_CODE" B 
+								 			    ON	A."COMM_CL_CD" = B."COMM_CL_CD"
+								   			 WHERE	A."COMM_CL_CD" = 'GS008'
+			                           		   AND	B."COMM_CD" NOT IN (
+                            								SELECT	BB2."LANG_CL"
+                            								  FROM	"SYS_PROGRAM_LANGUAGE" BB2                           
+               											   	 WHERE  BB2."PROG_CD" = #{PROG_CD}
+                           							)
+                           					   AND	A."USE_YN" = '1'
+                							   AND 	B."USE_YN" ='1'
+                							) T1 JOIN "SYS_CODE_LANGUAGE" T2 ON T1."COMM_CD" = T2."COMM_CD" 
+             					 WHERE 	T2."LANG_CL" = #{g_lang}                 
+              				) T3
+					 WHERE	T2."SYSTEM_CL" = #{SYSTEM_CL}
+					   AND  T2."PROG_CD" = #{PROG_CD}
+				) TTA
+	CROSS JOIN	(
+					SELECT K."ROWNUM" AS "TNO" FROM 
+					(SELECT ROW_NUMBER() OVER (ORDER BY "SYSTEM_CL" DESC) AS "ROWNUM"
+					FROM "SYS_PROGRAM_LANGUAGE") K
+					WHERE K."ROWNUM" &lt; 10
+        		) TTB
+	</select>
+	
+	<!-- 프로그램 다국어정보 등록 -->
+	<insert id="insertProgramMultilingua"> 
+		WITH UPSERT AS(  /* [ProgramService.sqlx][program.insertProgramMultilingua][프로그램 다국어정보 등록][강정현][2013.04.09] */
+    	 			UPDATE "SYS_PROGRAM_LANGUAGE" A
+    	 			   SET	"PROG_NM"	 = #{LANG_VALUE}
+    	 			   	  , "UPD_ID"	 = #{g_userId}
+						  , "UPD_DTM" = NOW()
+						WHERE "SYSTEM_CL" = #{SYSTEM_CL} 
+						AND "PROG_CD" = #{PROG_CD}
+						AND "LANG_CL" = #{LANG_CL_CD}
+						RETURNING A.*) 
+						
+    				INSERT INTO "SYS_PROGRAM_LANGUAGE"( 
+	            			"SYSTEM_CL"
+              				, "PROG_CD"
+			  				, "LANG_CL"
+			  				, "PROG_NM"
+			  				, "REG_ID"
+						  	, "REG_DTM"
+						  	, "UPD_ID"
+						  	, "UPD_DTM"
+	       			) SELECT 
+	       					 #{SYSTEM_CL}
+			  				, #{PROG_CD}      
+              				, #{LANG_CL_CD}      
+              				, #{LANG_VALUE}
+              				, #{g_userId}
+				           	, NOW()
+				           	, #{g_userId}
+				           	, NOW()
+				        WHERE NOT EXISTS (SELECT "SYSTEM_CL", "PROG_CD", "LANG_CL" 
+				        					FROM UPSERT 
+				        					WHERE "SYSTEM_CL" = #{SYSTEM_CL} 
+											AND "PROG_CD" = #{PROG_CD}
+											AND "LANG_CL" = #{LANG_CL_CD}   	
+	       			)
+	</insert>
+	
+	<!-- 프로그램버튼 다국어정보 등록 -->
+	<insert id="insertProgramBtn"> 
+		WITH UPSERT AS( /* [ProgramService.sqlx][program.insertProgramBtn][프로그램 사용자 버튼 다국어 정보 등록][강정현][2013.04.09] */
+    	 			UPDATE "SYS_PROGRAM_LANGUAGE" A
+		   			SET  "UPD_ID"	= #{g_userId}
+					, "UPD_DTM"   = NOW()	 
+		   		<if test="BTN_TYPE_CD == &quot;BTN1_NM&quot;">
+		   			,"BTN1_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN2_NM&quot;">
+		   			,"BTN2_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN3_NM&quot;">
+		   			,"BTN3_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN4_NM&quot;">
+		   			,"BTN4_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN5_NM&quot;">
+		   			,"BTN5_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN6_NM&quot;">
+		   			,"BTN6_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN7_NM&quot;">
+		   			,"BTN7_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN8_NM&quot;">
+		   			,"BTN8_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN9_NM&quot;">
+		   			,"BTN9_NM" = #{BTN_LANG_VALUE}		
+		   		</if>
+		   		<if test="BTN_TYPE_CD == &quot;BTN10_NM&quot;">
+		   			,"BTN10_NM" = #{BTN_LANG_VALUE}		
+		   		</if>		   					   				
+		   		    WHERE "PROG_CD" = #{PROG_CD}
+		  			AND	"LANG_CL" = #{COMM_CD}
+		  			RETURNING A.*) 
+		  			
+		INSERT INTO "SYS_PROGRAM_LANGUAGE" (
+					  "SYSTEM_CL"
+	              	, "PROG_CD"
+					, "LANG_CL"
+					, "BTN1_NM"
+					, "BTN2_NM"
+					, "BTN3_NM"
+					, "BTN4_NM"
+					, "BTN5_NM"
+					, "BTN6_NM"
+					, "BTN7_NM"
+					, "BTN8_NM"
+					, "BTN9_NM"
+					, "BTN10_NM"
+					, "REG_ID"
+				  	, "REG_DTM"
+				  	, "UPD_ID"
+				  	, "UPD_DTM"
+		) SELECT 
+					  #{SYSTEM_CL}
+			  		, #{PROG_CD}      
+	                , #{COMM_CD}      
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN1_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN2_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN3_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN4_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN5_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN6_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN7_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN8_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN9_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , CASE #{BTN_TYPE_CD} WHEN 'BTN10_NM' THEN #{BTN_LANG_VALUE} ELSE '' END
+	                , #{g_userId}
+	             	, NOW()
+	             	, #{g_userId}
+	             	, NOW()
+	       WHERE NOT EXISTS (SELECT "PROG_CD", "LANG_CL" 
+				        	 FROM UPSERT 
+				        	  WHERE "PROG_CD" = #{PROG_CD}
+		  						AND	"LANG_CL" = #{COMM_CD} 	
+	       			)
+	</insert>
+</mapper>

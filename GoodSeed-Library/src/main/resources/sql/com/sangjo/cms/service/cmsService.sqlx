@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cms">
+	<!-- 파일목록 조회 -->
+	<select id="getFileList" resultType="HMap">
+		SELECT  /* [cmsService.sqlx][cms.getFileList][파일목록 조회][jay][2016.12.27] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY "PROCESS_DT" DESC) AS "ROWCNT"
+				      FROM 	(
+				      			SELECT	  "CMS_FILE_NO"
+        								, "PROCESS_DT"
+        								, "FILE_NAME"
+        								, "APPLY_YN"
+								        ,
+								        <!-- 그리드 sorting -->
+										<if test='sidx != null and sidx !=""'>					    
+											ROW_NUMBER() OVER (
+											<trim prefix="ORDER BY">
+											<if test="sidx == &quot;PROCESS_DT&quot;">"PROCESS_DT"</if>
+											<if test="sidx == &quot;FILE_NAME&quot;">"FILE_NAME"</if>
+											<if test="sord == &quot;asc&quot;">ASC</if>
+											<if test="sord == &quot;desc&quot;">DESC</if>
+											</trim>
+										 	) AS "ROWNUM"
+									  	</if>				    						    
+										<!--// 그리드 sorting -->
+										<if test="sidx == null">
+										ROW_NUMBER() OVER (ORDER BY "PROCESS_DT" DESC) AS "ROWNUM"
+										</if>
+  							   	  FROM	"CMS_FILE"
+ 								 WHERE 	1 = 1
+ 								   AND  "FILE_TYPE" = #{FILE_TYPE}
+ 								 <if test="START_DT != null and START_DT != ''">
+ 								   AND	"PROCESS_DT" BETWEEN #{START_DT} AND #{END_DT}
+ 								 </if>
+ 								 <if test="APPLY_YN != null and APPLY_YN != ''">
+ 								 	AND "APPLY_YN" = CASE WHEN #{APPLY_YN} = 'Y' THEN '1' WHEN #{APPLY_YN} = '1' THEN '1' ELSE '0' END
+ 								 </if>
+      						) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST(#{END_ROW} AS NUMERIC)
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;= CAST(#{START_ROW} AS NUMERIC)
+    </select>
+    
+	<!-- 파일목록 데이터 총 갯수 조회 -->
+    <select id="getFileListTotalCount" resultType="int">
+    	SELECT  /* [cmsService.sqlx][cms.getFileListTotalCount][jay][2016.12.27] */
+                COUNT(1)
+          FROM  "CMS_FILE"
+         WHERE 	1 = 1
+           AND  "FILE_TYPE" = #{FILE_TYPE}
+		 <if test="START_DT != null and START_DT != ''">
+		   AND	"PROCESS_DT" BETWEEN #{START_DT} AND #{END_DT}
+		 </if>
+		 <if test="APPLY_YN != null and APPLY_YN != ''">
+		 	AND "APPLY_YN" = CASE WHEN #{APPLY_YN} = 'Y' THEN '1' WHEN #{APPLY_YN} = '1' THEN '1' ELSE '0' END
+		 </if>
+    </select>
+   	<!-- CMS 파일 등록 -->
+   	<insert id="inserteCMSFile">
+        INSERT  /* [cmsService.sqlx][cms.inserteCMSFile][CMS 파일 등록][jay][2016.12.27] */
+        INTO  "CMS_FILE"	(
+           			  "CMS_FILE_NO"
+           			, "PROCESS_DT"
+            		, "FILE_TYPE"
+            		, "FILE_NAME"
+            		, "FILE_PATH"
+            		, "APPLY_YN"
+            		, "REG_ID"
+            		, "REG_DTM"
+        ) VALUES (
+              		  #{header.FILE_NAME}
+            		, '20' || #{header.REQ_DT}
+            		, #{FILE_TYPE}
+            		, #{file.UPLOADED_FILE_NM}
+            		, #{file.UPLOADED_DIR_PATH}
+            		, '0'
+            		, #{g_userId}
+            		, NOW()
+        )
+    </insert>
+    
+    <!-- CMS 파일 수정 -->
+    <update id="updateCMSFile">
+        UPDATE  /* [cmsService.sqlx][cms.updateCMSFile][CMS 파일 수정][jay][2016.12.27] */
+                "CMS_FILE"
+        SET  	"APPLY_YN"     =  COALESCE(#{APPLY_YN}, '0')
+            	, "UPD_ID"    = #{g_userId}
+            	, "UPD_DTM"   = NOW()
+		WHERE  	"CMS_FILE_NO" 	= #{CMS_FILE_NO}
+		AND 	"PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+    </update>
+
+	<select id="getCMSFile" resultType="HMap">
+		SELECT 
+			"CMS_FILE_NO"
+        	, "PROCESS_DT"
+       		, "FILE_TYPE"
+       		, "FILE_NAME"
+       		, "FILE_PATH"
+       		, "APPLY_YN"
+       	FROM
+       		"CMS_FILE"
+       	WHERE  	"CMS_FILE_NO" 	= #{CMS_FILE_NO}
+       	AND 	"PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</select>
+
+	<!-- CMS 파일의 데이터 조회 -->
+	<select id="getCMSFileData" resultType="HMap">
+		SELECT	/* [cmsService.sqlx][cms.getCMSFileData][CMS 파일의 데이터 조회][최진영][2016.12.27] */
+			A."CMS_FILE_NO",
+			A."FILE_TYPE",	
+			B."SEQ",
+			B."REQ_DT",
+			B."REQ_TYPE",
+			B."PAYER_NO",
+			SUBSTR(B."BANK_CD", 1, 3) AS "BANK_CD",
+			B."ACCOUNT_NO",
+			C."ACCOUNT_NM",
+			B."ACCOUNT_BIRTH" AS "ACCOUNT_BIRTH_ORIGIN",
+			CASE 
+				WHEN CHAR_LENGTH(B."ACCOUNT_BIRTH") = 8 
+				THEN SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 7, 2) 
+				ELSE SUBSTR(B."ACCOUNT_BIRTH", 1, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2)
+			END AS "ACCOUNT_BIRTH",
+			B."FILE_SEQ" AS "ATTACH_FILE_SEQ",
+			E."UPLOADED_FILE_NM" AS "ATTACH_FILE_NM",
+			B."PAY_REQ_AMT",
+			COALESCE(B."RESULT_CD", '') AS "RESULT_CD",
+			COALESCE(B."ERROR_CD", '') AS "ERROR_CD",
+			B."PAY_TYPE",
+			C."CONT_NO",
+			C."REGULAR_PAY_DAY",
+			CASE WHEN A."FILE_TYPE" = 'EB21' THEN B."MONTH_PAY_AMT" ELSE C."MONTH_PAY_AMT" END AS "MONTH_PAY_AMT",
+			B."UNPAID_AMT",
+			B."NEXT_TEMP_PAY_AMT",
+			C."TOT_UNPAID_AMT",
+			CASE WHEN D."CUST_NM" = C."CONT_NM" THEN D."CUST_NM" ELSE D."CUST_NM" || '(' || C."CONT_NM" || ')' END AS "CUST_NM",
+			COALESCE(D."TEL", '') AS "TEL",
+			COALESCE(D."HP", '') AS "HP",
+			D."CUST_NO"
+	   	  FROM	"CMS_FILE" A
+	   	  		JOIN "CMS_FILE_DATA" B ON A."CMS_FILE_NO" = B."CMS_FILE_NO" AND A."PROCESS_DT" = B."PROCESS_DT"
+	   	  		LEFT OUTER JOIN "CONTRACT" C ON B."PAYER_NO" = C."PAYER_NO"
+	   	  		LEFT OUTER JOIN "CUSTOMER" D ON C."CUST_NO" = D."CUST_NO"
+	   	  		LEFT OUTER JOIN "ATTACH_FILES" E ON B."FILE_SEQ" = E."FILE_SEQ"
+		 WHERE 	A."CMS_FILE_NO" = #{CMS_FILE_NO}
+		 AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		 <if test='NEW_REQ_TYPE != null and NEW_REQ_TYPE == "Y"'>
+		 AND B."REQ_TYPE" = '1'
+		 </if>
+		 ORDER BY
+			<if test="sidx == null">
+				LPAD(B."SEQ", 5, '0') ASC
+			</if>
+			<if test='sidx != null and sidx !=""'>					    
+				<if test="sidx == &quot;SEQ&quot;">B."SEQ"</if>
+				<if test="sidx == &quot;PAYER_NO&quot;">B."PAYER_NO"</if>
+				<if test="sidx == &quot;CONT_NO&quot;">C."CONT_NO"</if>
+				<if test="sidx == &quot;REQ_TYPE&quot;">B."REQ_TYPE"</if>
+				<if test="sidx == &quot;RESULT_CD&quot;">B."RESULT_CD"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+				<if test="sord == &quot;desc&quot;">DESC</if>
+		  	</if>
+    </select>
+
+	<select id="getCMSFileDataTotalInfo" resultType="HMap">
+		SELECT	/* [cmsService.sqlx][cms.getCMSFileDataTotalInfo][CMS 파일의 데이터 조회] */
+			COUNT(*) AS "TOTAL_COUNT",
+			SUM(CASE WHEN A."FILE_TYPE" = 'EB21' THEN B."MONTH_PAY_AMT" ELSE C."MONTH_PAY_AMT" END) AS "TOT_MONTH_PAY_AMT",
+			SUM(B."UNPAID_AMT") AS "TOT_UNPAID_AMT",
+			SUM(B."NEXT_TEMP_PAY_AMT") AS "TOT_NEXT_TEMP_PAY_AMT",
+			SUM(B."PAY_REQ_AMT") AS "TOT_PAY_REQ_AMT"
+	   	  FROM	"CMS_FILE" A
+	   	  		JOIN "CMS_FILE_DATA" B ON A."CMS_FILE_NO" = B."CMS_FILE_NO" AND A."PROCESS_DT" = B."PROCESS_DT"
+	   	  		LEFT OUTER JOIN "CONTRACT" C ON B."PAYER_NO" = C."PAYER_NO"
+	   	  		LEFT OUTER JOIN "CUSTOMER" D ON C."CUST_NO" = D."CUST_NO"
+	   	  		LEFT OUTER JOIN "ATTACH_FILES" E ON B."FILE_SEQ" = E."FILE_SEQ"
+		 WHERE 	A."CMS_FILE_NO" = #{CMS_FILE_NO}
+		 AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		 <if test='NEW_REQ_TYPE != null and NEW_REQ_TYPE == "Y"'>
+		 AND B."REQ_TYPE" = '1'
+		 </if>
+    </select>
+
+	<!-- CMS 파일의 데이터 조회 (엑셀다운로드를 위한)-->
+	<select id="getCMSFileDataForExcel" resultType="HMap">
+		SELECT	/* [cmsService.sqlx][cms.getCMSFileDataForExcel][CMS 파일의 데이터 조회][최진영][2016.12.27] */
+			A."CMS_FILE_NO",
+			A."FILE_TYPE",	
+			B."SEQ",
+			B."REQ_DT",
+			B."REQ_TYPE",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE X."COMM_CL_CD" ='GS033' AND X."COMM_CD" = B."REQ_TYPE") AS "REQ_TYPE_NM",
+			B."PAYER_NO",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE SUBSTR(B."BANK_CD", 1, 3) = X."COMM_CD" AND "COMM_CL_CD" = 'GS021') AS "BANK_NM", 
+			B."ACCOUNT_NO",
+			C."ACCOUNT_NM",
+			CASE 
+				WHEN CHAR_LENGTH(B."ACCOUNT_BIRTH") = 8 
+				THEN SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 7, 2) 
+				ELSE SUBSTR(B."ACCOUNT_BIRTH", 1, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 3, 2) || '/' || SUBSTR(B."ACCOUNT_BIRTH", 5, 2)
+			END AS "ACCOUNT_BIRTH",
+			B."FILE_SEQ" AS "ATTACH_FILE_SEQ",
+			E."UPLOADED_FILE_NM" AS "ATTACH_FILE_NM",
+			B."PAY_REQ_AMT",
+			B."RESULT_CD",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE B."ERROR_CD" = X."COMM_CD" AND "COMM_CL_CD" = 'GS032') AS "ERROR_NM",
+			(SELECT X."COMM_CD_NM" FROM "SYS_CODE" X WHERE B."PAY_TYPE" = X."COMM_CD" AND "COMM_CL_CD" = 'GS033') AS "PAY_TYPE_NM",
+			C."CONT_NO",
+			C."REGULAR_PAY_DAY",
+			CASE WHEN A."FILE_TYPE" = 'EB21' THEN B."MONTH_PAY_AMT" ELSE C."MONTH_PAY_AMT" END AS "MONTH_PAY_AMT",
+			B."UNPAID_AMT",
+			B."NEXT_TEMP_PAY_AMT",
+			C."TOT_UNPAID_AMT",
+			CASE WHEN D."CUST_NM" = C."CONT_NM" THEN D."CUST_NM" ELSE D."CUST_NM" || '(' || C."CONT_NM" || ')' END AS "CUST_NM",
+			D."TEL",
+			D."HP"
+	   	  FROM	"CMS_FILE" A
+	   	  		JOIN "CMS_FILE_DATA" B ON A."CMS_FILE_NO" = B."CMS_FILE_NO" AND A."PROCESS_DT" = B."PROCESS_DT"
+	   	  		LEFT OUTER JOIN "CONTRACT" C ON B."PAYER_NO" = C."PAYER_NO"
+	   	  		LEFT OUTER JOIN "CUSTOMER" D ON C."CUST_NO" = D."CUST_NO"
+	   	  		LEFT OUTER JOIN "ATTACH_FILES" E ON B."FILE_SEQ" = E."FILE_SEQ"
+		 WHERE 	A."CMS_FILE_NO" = #{CMS_FILE_NO}
+		 AND A."PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+		 ORDER BY
+			<if test="sidx == null">
+				B."SEQ" ASC
+			</if>
+			<if test='sidx != null and sidx !=""'>
+				<if test="sidx == &quot;PAYER_NO&quot;">B."PAYER_NO"</if>
+				<if test="sidx == &quot;CONT_NO&quot;">C."CONT_NO"</if>
+				<if test="sord == &quot;asc&quot;">ASC</if>
+				<if test="sord == &quot;desc&quot;">DESC</if>
+		  	</if>
+    </select>
+    
+   	<!-- CMS Data 등록 -->
+   	<insert id="inserteCMSData">
+        INSERT  /* [cmsService.sqlx][cms.inserteCMSData][CMS Data 등록][jay][2016.12.28] */
+        INTO  "CMS_FILE_DATA"	(
+           			  "CMS_FILE_NO"
+           			, "PROCESS_DT"
+           			, "SEQ"
+           			, "REQ_DT"
+           			, "REQ_TYPE"
+           			, "PAYER_NO"
+           			, "BANK_CD"
+           			, "ACCOUNT_NO"
+           			, "ACCOUNT_BIRTH"
+           			, "BANK_BRANCH_CD"
+           			, "HP"
+           			, "FILE_SEQ"
+           			, "PAY_REQ_AMT"
+           			, "RESULT_CD"
+           			, "ERROR_CD"
+           			, "PAY_TYPE"
+            		, "REG_ID"
+            		, "REG_DTM"
+        ) VALUES (
+              		  #{header.FILE_NAME}
+              		, '20' || #{header.REQ_DT}
+            		, #{data.SEQ}
+            		, #{data.REQ_DT}
+            		, #{data.REQ_TYPE}
+            		, #{data.PAYER_NO}
+            		, #{data.BANK_CD}
+            		, #{data.ACCOUNT_NO}
+            		, #{data.ACCOUNT_BIRTH}
+            		, #{data.BANK_BRANCH_CD}
+            		, #{data.HP}
+            		, #{FILE_SEQ}
+            		, CAST(#{PAY_REQ_AMT} AS INTEGER)
+            		, #{data.RESULT_CD}
+            		, #{data.ERROR_CD}
+            		, #{PAY_TYPE}
+            		, #{g_userId}
+            		, NOW()
+        )
+    </insert>
+	
+	<select id="getLayoutGroupByType" resultType="HMap">
+		SELECT	/* [cmsService.sqlx][cms.getLayoutGroupByType][jay][2017.01.06] */
+				"TYPE"
+				, SUM(CAST("LENGTH" AS INTEGER)) AS "TOT_LENGTH"
+		  FROM 	"CMS_LAYOUT"
+		 WHERE "TELEGRAM_NO" = #{FILE_TYPE}
+		 GROUP BY "TYPE"
+		 ORDER BY CASE "TYPE" WHEN 'H' THEN 1 WHEN 'D' THEN 2 WHEN 'T' THEN 3 END ASC
+	</select>
+	
+	<select id="getLayoutsOfType" resultType="HMap">
+		SELECT	/* [cmsService.sqlx][cms.getLayoutsOfType][jay][2017.01.06] */
+				"TELEGRAM_NO"
+				, "SEQ"
+				, "NAME"
+				, "MODE"
+				, "LENGTH"
+				, "PAD_DIRECTION"
+				, "PAD_TEXT"
+				, "TYPE"
+				, "DEFAULT_VALUE"
+		  FROM 	"CMS_LAYOUT"
+		 WHERE "TELEGRAM_NO" = #{FILE_TYPE}
+		   AND "TYPE" = #{TYPE}
+		 ORDER BY "SEQ" ASC
+	</select>
+	
+	<select id="getLastCreateDate" resultType="string">
+		SELECT		/* [cmsService.sqlx][cms.getLastCreateDate][jay][2017.01.06] */
+			MAX("PROCESS_DT") AS LAST_DATE
+		FROM "CMS_FILE"
+		WHERE "FILE_TYPE" = #{FILE_TYPE}
+		GROUP BY "PROCESS_DT"
+	</select>
+	
+	<!-- EB13 의 신규신청 건 데이터 갯수를 조회 -->
+	<select id="getNewReqCountOfEB13" resultType="integer">
+		SELECT		/* [cmsService.sqlx][cms.getNewReqCountOfEB13][jay][2017.03.10] */
+			 COUNT(*) CNT
+		FROM "CMS_FILE_DATA"
+		WHERE "CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND "PROCESS_DT" = #{REQ_DT}
+		AND "REQ_TYPE" = '1'
+	</select>
+
+	<update id="updateApplyStatusOfCMSFile">
+		UPDATE "CMS_FILE"	/* [cmsService.sqlx][cms.updateApplyStatusOfCMSFile][jay][2017.03.13] */
+			SET "APPLY_YN" = '1'
+			, "UPD_ID" = #{g_userId}
+			, "UPD_DTM" = NOW()
+		WHERE "CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND "PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</update>
+	
+	<select id="getPaymentList" resultType="HMap">
+		SELECT  /* [cmsService.sqlx][cms.getPaymentList][jay][2017.03.14] */
+				PAGING_T2.*
+		  FROM	(
+		  			SELECT	PAGING_T1.*
+				       		, ROW_NUMBER() OVER (ORDER BY "PROCESS_DT" DESC) AS "ROWCNT"
+				      FROM 	(		
+							SELECT
+								ROW_NUMBER() OVER (ORDER BY B."REQ_DT" ASC) AS "ROWNUM"
+								, B."PROCESS_DT"
+								, B."REQ_DT"
+								, B."RESULT_PAID_AMT" AS "PAID_AMT"
+								, B."RESULT_UNPAID_AMT" AS "UNPAID_AMT"
+								, B."UPD_DTM"
+							FROM "CONTRACT" A 
+								JOIN "CMS_FILE_DATA" B ON A."CONT_NO" = B."CONT_NO"
+								JOIN "CMS_FILE" C ON B."CMS_FILE_NO" = C."CMS_FILE_NO" AND B."PROCESS_DT" = C."PROCESS_DT"
+							WHERE A."CONT_NO" = #{CONT_NO}
+							<if test="includeUnpaidAmt == null || includeUnpaidAmt == 'N'">
+							AND B."RESULT_UNPAID_AMT" = 0
+							</if>
+							AND C."FILE_TYPE" = 'EB21'
+      						) PAGING_T1
+		         	 WHERE  PAGING_T1."ROWNUM" &lt;=  CAST(#{END_ROW} AS NUMERIC)
+   				) PAGING_T2
+		 WHERE 	PAGING_T2."ROWCNT" &gt;= CAST(#{START_ROW} AS NUMERIC)
+	</select>
+
+	<select id="getPaymentListTotalCount" resultType="int">
+		SELECT 	/* [cmsService.sqlx][cms.getPaymentListTotalCount][jay][2017.04.05] */
+			COUNT(*) "CNT"
+		FROM "CONTRACT" A 
+			JOIN "CMS_FILE_DATA" B ON A."CONT_NO" = B."CONT_NO"
+			JOIN "CMS_FILE" C ON B."CMS_FILE_NO" = C."CMS_FILE_NO" AND B."PROCESS_DT" = C."PROCESS_DT"
+		WHERE A."CONT_NO" = #{CONT_NO}
+		<if test="includeUnpaidAmt == null || includeUnpaidAmt == 'N'">
+		AND B."RESULT_UNPAID_AMT" = 0
+		</if>
+		AND C."FILE_TYPE" = 'EB21'
+	</select>
+	
+	<select id="getPaymentListExcelDownload" resultType="HMap">
+		SELECT	/* [cmsService.sqlx][cms.getPaymentListExcelDownload] */
+			CAST(ROW_NUMBER() OVER (ORDER BY B."REQ_DT" ASC) AS INTEGER) AS "ROWNUM"
+			, B."PROCESS_DT"
+			, B."REQ_DT"
+			, B."RESULT_PAID_AMT" AS "PAID_AMT"
+			, B."RESULT_UNPAID_AMT" AS "UNPAID_AMT"
+			, B."UPD_DTM"
+		FROM "CONTRACT" A 
+			JOIN "CMS_FILE_DATA" B ON A."CONT_NO" = B."CONT_NO"
+			JOIN "CMS_FILE" C ON B."CMS_FILE_NO" = C."CMS_FILE_NO" AND B."PROCESS_DT" = C."PROCESS_DT"
+		WHERE A."CONT_NO" = #{CONT_NO}
+		<if test="includeUnpaidAmt == null || includeUnpaidAmt == 'N'">
+		AND B."RESULT_UNPAID_AMT" = 0
+		</if>
+		AND C."FILE_TYPE" = 'EB21'	
+	</select>
+	
+	<select id="getApplyYnOfCmsFile" resultType="string">
+		SELECT "APPLY_YN"	/* [cmsService.sqlx][cms.getApplyYnOfCmsFile] */
+		FROM "CMS_FILE"
+		WHERE "CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND "PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</select>	
+
+	<delete id="deleteCMSFile">
+		DELETE FROM "CMS_FILE"	/* [cmsService.sqlx][cms.deleteCMSFile] */
+		WHERE "CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND "PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</delete>
+	
+	<delete id="deleteCMSFileData">
+		DELETE FROM "CMS_FILE_DATA"		/* [cmsService.sqlx][cms.deleteCMSFileData] */
+		WHERE "CMS_FILE_NO" = #{CMS_FILE_NO}
+		AND "PROCESS_DT" = REPLACE(#{PROCESS_DT}, '-', '')
+	</delete>
+	
+</mapper>

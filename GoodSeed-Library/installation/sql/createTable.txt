@@ -1,0 +1,775 @@
+-- 1. 시스템 사용자 테이블
+-- Table: "SYS_USER"
+-- DROP TABLE "SYS_USER";
+
+CREATE TABLE "SYS_USER"
+(
+  "USER_ID" character varying(10), -- 사용자ID
+  "USER_NM" character varying(30), -- 사용자명
+  "PWD_NO" character varying(65), -- 비밀번호
+  "USE_YN" character(1), -- 사용여부
+  "USER_STS_CD" character varying(10), -- 사용자 상태코드
+  "MAIL_ID" character varying(100), -- 메일ID
+  "HANDPHONE_NO" character varying(25), -- 휴대번호
+  "COTEL_NO" character varying(25), -- 사무실번호
+  "FAIL_IN_CNT" smallint, -- 로그인실패 횟수
+  "FAIL_TOT_CNT" smallint, -- 실패누적 횟수
+  "FAIL_IN_DTM" timestamp without time zone, -- 로그인실패 시간
+  "PWD_CHG_DT" character varying(8), -- 비밀번호 변경일자
+  "TMP_PWD_YN" character(1), --  임시비밀번호 여부
+  "FINAL_IN_DTM" timestamp without time zone, -- 마지막 로그인일시
+  "FINAL_OUT_DTM" timestamp without time zone, -- 마지막 로그아웃일시
+  "LOGIN_IP_NO" character varying(20), -- 로그인IP
+  "LOGIN_CHK" character varying(14), --로그인체크일자
+  "ADMIN_YN" character(1), -- 관리자여부
+  "RMK" character varying(100), -- 설명
+  "REG_ID" character varying(10), -- 등록자ID
+  "REG_DTM" timestamp without time zone, -- 등록일시
+  "UPD_ID" character varying(10),	--수정자ID
+  "UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_USER"
+  OWNER TO goodseed;
+COMMENT ON TABLE "SYS_USER"
+  IS '사용자';
+COMMENT ON COLUMN "SYS_USER"."USER_ID" IS '사용자ID';
+COMMENT ON COLUMN "SYS_USER"."USER_NM" IS '사용자명';
+COMMENT ON COLUMN "SYS_USER"."PWD_NO" IS '비밀번호';
+COMMENT ON COLUMN "SYS_USER"."USE_YN" IS '사용여부';
+COMMENT ON COLUMN "SYS_USER"."USER_STS_CD" IS '사용자 상태코드';
+COMMENT ON COLUMN "SYS_USER"."MAIL_ID" IS '메일ID';
+COMMENT ON COLUMN "SYS_USER"."HANDPHONE_NO" IS '휴대번호';
+COMMENT ON COLUMN "SYS_USER"."COTEL_NO" IS '사무실번호';
+COMMENT ON COLUMN "SYS_USER"."FAIL_IN_CNT" IS '로그인실패 횟수';
+COMMENT ON COLUMN "SYS_USER"."PWD_CHG_DT" IS '비밀번호 변경일자';
+COMMENT ON COLUMN "SYS_USER"."FINAL_IN_DTM" IS '마지막 로그인일시';
+COMMENT ON COLUMN "SYS_USER"."REG_DTM" IS '등록일시';
+COMMENT ON COLUMN "SYS_USER"."UPD_DTM" IS '수정일시';
+
+
+--2. 시스템설정 테이블
+-- Table: "SYS_CONFIG"
+-- DROP TABLE "SYS_CONFIG";
+
+CREATE TABLE "SYS_CONFIG"
+(
+  "VARIABLE" character varying(100), -- 변수
+  "VALUE" character varying(200), -- 지정값
+  "REMARK" character varying(200),
+  "REG_ID" character varying(10), -- 등록자ID
+  "REG_DTM" timestamp without time zone, -- 등록일시
+  "UPD_ID" character varying(10), -- 수정자ID
+  "UPD_DTM" timestamp without time zone, -- 수정일시
+  "USE_YN" character(1) -- 사용유무...
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_CONFIG"
+  OWNER TO goodseed;
+COMMENT ON TABLE "SYS_CONFIG"
+  IS '시스템설정값';
+COMMENT ON COLUMN "SYS_CONFIG"."VARIABLE" IS '변수';
+COMMENT ON COLUMN "SYS_CONFIG"."VALUE" IS '지정값';
+COMMENT ON COLUMN "SYS_CONFIG"."REG_ID" IS '등록자ID';
+COMMENT ON COLUMN "SYS_CONFIG"."REG_DTM" IS '등록일시';
+COMMENT ON COLUMN "SYS_CONFIG"."UPD_ID" IS '수정자ID';
+COMMENT ON COLUMN "SYS_CONFIG"."UPD_DTM" IS '수정일시';
+COMMENT ON COLUMN "SYS_CONFIG"."USE_YN" IS '사용유무
+1:사용, 0:미사용';
+
+
+--3. 공통그룹코드 테이블
+-- Table: "SYS_CL_CODE"
+-- DROP TABLE "SYS_CL_CODE";
+
+CREATE TABLE "SYS_CL_CODE"
+(
+  "COMM_CL_CD" character varying(10), -- 공통그룹코드
+  "COMM_CL_CD_NM" character varying(50), -- 공통그룹코드명
+  "RMK" character varying(100),
+  "USE_YN" character(1),
+  "REG_ID" character varying(10),
+  "REG_DTM" timestamp without time zone,
+  "UPD_ID" character varying(10),
+  "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_CL_CODE"
+  OWNER TO goodseed;
+COMMENT ON TABLE "SYS_CL_CODE"
+  IS '그룹코드';
+COMMENT ON COLUMN "SYS_CL_CODE"."COMM_CL_CD" IS '공통그룹코드';
+COMMENT ON COLUMN "SYS_CL_CODE"."COMM_CL_CD_NM" IS '공통그룹코드명';
+
+
+--4. 상세코드 테이블
+-- Table: "SYS_CODE"
+-- DROP TABLE "SYS_CODE";
+
+CREATE TABLE "SYS_CODE"
+(
+  "COMM_CL_CD" character varying(10),
+  "COMM_CD" character varying(20),
+  "COMM_CD_NM" character varying(50),
+  "LNUP_ORD" smallint,
+  "RMK" character varying(100),
+  "USE_YN" character(1),
+  "DFLT_YN" character(1),
+  "REG_ID" character varying(10),
+  "REG_DTM" timestamp without time zone,
+  "UPD_ID" character varying(10),
+  "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_CODE"
+  OWNER TO goodseed;
+COMMENT ON TABLE "SYS_CODE"
+  IS '코드';
+
+  
+--5. 프로그램 테이블
+-- Table: "SYS_PROGRAM"
+-- DROP TABLE "SYS_PROGRAM";
+
+CREATE TABLE "SYS_PROGRAM"
+(
+	  "PROG_CD" character varying(10)
+	, "PROG_NM" character varying(50)
+	, "SYSTEM_CL" character varying(10)
+	, "PROG_LVL" smallint
+	, "PROG_NO" character varying(10)
+	, "PROG_URL" character varying(100)
+	, "MENU_YN" character(1)
+	, "TOPMENU_YN" character(1)
+	, "BTN1_NM" character varying(50)
+	, "BTN2_NM" character varying(50)
+	, "BTN3_NM" character varying(50)
+	, "BTN4_NM" character varying(50)
+	, "BTN5_NM" character varying(50)
+	, "BTN6_NM" character varying(50)
+	, "BTN7_NM" character varying(50)
+	, "BTN8_NM" character varying(50)
+	, "BTN9_NM" character varying(50)
+	, "BTN10_NM" character varying(50)
+	, "USE_YN" character(1)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_PROGRAM" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_PROGRAM" IS '프로그램';
+
+
+
+--6. 권한-프로그램 매핑 테이블
+-- Table: "SYS_AUTH_PROG"
+-- DROP TABLE "SYS_AUTH_PROG";
+
+CREATE TABLE "SYS_AUTH_PROG"
+(
+	  "AUTH_CD" character varying(10)
+	, "PROG_CD" character varying(10)
+	, "SEARCH_YN" character(1)
+	, "NEW_YN" character(1)
+	, "DELETE_YN" character(1)
+	, "SAVE_YN" character(1)
+	, "PRINT_YN" character(1)
+	, "BTN1_YN" character(1)
+	, "BTN2_YN" character(1)
+	, "BTN3_YN" character(1)
+	, "BTN4_YN" character(1)
+	, "BTN5_YN" character(1)
+	, "BTN6_YN" character(1)
+	, "BTN7_YN" character(1)
+	, "BTN8_YN" character(1)
+	, "BTN9_YN" character(1)
+	, "BTN10_YN" character(1)
+	, "USE_YN" character(1)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_AUTH_PROG" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_AUTH_PROG" IS '권한-프로그램 매핑';
+
+
+
+--7. 권한 매핑 테이블
+-- Table: "SYS_AUTHORITY"
+-- DROP TABLE "SYS_AUTHORITY";
+
+CREATE TABLE "SYS_AUTHORITY"
+(
+	  "AUTH_CD" character varying(10)
+	, "AUTH_NM" character varying(50)
+	, "AUTH_CL" character varying(10)
+	, "SYSTEM_CL" character varying(10)
+	, "USE_YN" character(1)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_AUTHORITY" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_AUTHORITY" IS '권한';
+
+
+
+--8. 권한-사용자 매핑 테이블
+-- Table: "SYS_AUTH_USER"
+-- DROP TABLE "SYS_AUTH_USER";
+
+CREATE TABLE "SYS_AUTH_USER"
+(
+	  "AUTH_CD" character varying(10)
+	, "USER_ID" character varying(10)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_AUTH_USER" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_AUTH_USER" IS '권한-사용자 매핑';
+
+
+
+--9. 사용자 URL 테이블
+-- Table: "SYS_USERURL"
+-- DROP TABLE "SYS_USERURL";
+
+CREATE TABLE "SYS_USERURL"
+(
+	  "USER_ID" character varying(10)
+	, "URLADDR1" character varying(100)
+	, "URLADDR2" character varying(100)
+	, "URLADDR3" character varying(100)
+	, "URLADDR4" character varying(100)
+	, "URLADDR5" character varying(100)
+	, "REG_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_USERURL" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_USERURL" IS '사용자 URL';
+
+
+
+--10. 내메뉴 테이블
+-- Table: "SYS_MYMENU"
+-- DROP TABLE "SYS_MYMENU";
+
+CREATE TABLE "SYS_MYMENU"
+(
+	  "USER_ID" character varying(10)
+	, "PROG_CD" character varying(10)
+	, "MENU_SEQ" smallint
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_MYMENU" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_MYMENU" IS '내메뉴';
+
+
+
+--11. 사용자 LOG 테이블
+-- Table: "SYS_USER_LOG"
+
+-- DROP TABLE "SYS_USER_LOG";
+
+CREATE TABLE "SYS_USER_LOG"
+(
+  "USER_ID" character varying NOT NULL,
+  "LOG_CL" character(1),
+  "RMK" character varying(100),
+  "PWD_NO" character varying(30),
+  "IP_NO" character varying(20),
+  "PROG_CD" character varying(30) NOT NULL,
+  "PRO_STA_DTM" timestamp without time zone,
+  "PWD_CHG_DTM" timestamp without time zone,
+  "REG_ID" character varying(10),
+  "REG_DTM" timestamp without time zone NOT NULL,
+  "AUTH_CD" character varying(10),
+  "ALLOW_IP" character varying(20),
+  CONSTRAINT "SYS_USER_LOG_pkey" PRIMARY KEY ("USER_ID", "LOG_CL", "REG_DTM", "RMK")
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_USER_LOG" OWNER TO goodseed;
+GRANT ALL ON TABLE "SYS_USER_LOG" TO goodseed WITH GRANT OPTION;
+COMMENT ON TABLE "SYS_USER_LOG" IS '사용자 LOG';
+
+
+--12. LABEL 테이블
+-- Table: "SYS_LABEL"
+-- DROP TABLE "SYS_LABEL";
+
+CREATE TABLE "SYS_LABEL"
+(
+	  "SYSTEM_CL" character varying(10)
+	, "LABEL_CD" character varying(10)
+	, "LABEL_NM" character varying(30)
+	, "ATTRIBUTE1" character varying(20)
+	, "ATTRIBUTE2" character varying(20)
+	, "ATTRIBUTE3" character varying(20)
+	, "ATTRIBUTE4" character varying(20)
+	, "ATTRIBUTE5" character varying(20)
+	, "ATTRIBUTE6" character varying(20)
+	, "USE_YN" character(1)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_LABEL" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_LABEL" IS 'LABEL';
+
+
+
+--13. 허용목록 테이블
+-- Table: "SYS_ALLOWLIST"
+-- DROP TABLE "SYS_ALLOWLIST";
+
+CREATE TABLE "SYS_ALLOWLIST"
+(
+	  "GBN" character(1)
+	, "ALLOW_LIST" character varying(100)
+	, "REMARK" character varying(100)
+	, "USE_YN" character(1)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_ALLOWLIST" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_ALLOWLIST" IS '허용목록';
+
+
+
+--14. 사용자로그인 로그 테이블
+-- Table: "SYS_USERLOGIN_LOG"
+-- DROP TABLE "SYS_USERLOGIN_LOG";
+
+CREATE TABLE "SYS_USERLOGIN_LOG"
+(
+	  "USER_ID" character varying(10)
+	, "LOGIN_DTM" timestamp without time zone
+	, "LOGOUT_DTM" timestamp without time zone
+	, "LOGIN_IP_NO" character varying(20)
+	, "LOGIN_SUCC_YN" character(1)
+	, "REG_ID" character varying(10)
+	, "REG_DTM" timestamp without time zone
+	, "UPD_ID" character varying(10)
+	, "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_USERLOGIN_LOG" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_USERLOGIN_LOG" IS '사용자로그인 로그';
+
+
+
+--15. 허용IP 테이블
+-- Table: "SYS_ALLOW_IP"
+-- DROP TABLE "SYS_ALLOW_IP";
+
+CREATE TABLE "SYS_ALLOW_IP"
+(
+	  "USER_ID" character varying(10)
+	, "ALLOW_IP" character varying(20)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_ALLOW_IP" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_ALLOW_IP" IS '허용IP';
+
+
+
+--16. 매장 테이블
+-- Table: "SHOP"
+-- DROP TABLE "SHOP";
+
+CREATE TABLE "SHOP"
+(
+  "SHOP_CD" character varying(100) NOT NULL,
+  "SHOP_NM" character varying(200),
+  "MANAGER_NM" character varying(100),
+  "HANDPHONE_NO" character varying(25),
+  "COTEL_NO" character varying(25),
+  "ADDR" character varying(200),
+  "USE_YN" character(1),
+  "REG_ID" character varying(10),
+  "REG_DTM" timestamp without time zone,
+  "UPD_ID" character varying(10),
+  "UPD_DTM" timestamp without time zone,
+  CONSTRAINT "SHOP_pkey" PRIMARY KEY ("SHOP_CD")
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SHOP" OWNER TO goodseed;
+COMMENT ON TABLE "SHOP" IS '매장';
+
+
+
+--17. 약관 테이블
+-- Table: "TERMS"
+-- DROP TABLE "TERMS";
+
+CREATE TABLE "TERMS"
+(
+  "TERMS_CD" character varying(100) NOT NULL,
+  "TERMS_NM" character varying(200),
+  "TOT_CONTRACT_AMT" integer,
+  "TERMS_FILE_SEQ" character varying(25),
+  "RMK" character varying(200),
+  "USE_YN" character(1),
+  "REG_ID" character varying(10),
+  "REG_DTM" timestamp without time zone,
+  "UPD_ID" character varying(10),
+  "UPD_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "TERMS" OWNER TO goodseed;
+COMMENT ON TABLE "TERMS" IS '약관';
+
+
+
+--18. 파일업로드 테이블
+CREATE TABLE "ATTACH_FILES" (
+	"FILE_SEQ" character varying(10) NOT NULL,
+	"UPLOADED_DIR_PATH" character varying(200),
+	"UPLOADED_FILE_NM" character varying(200),
+	"SOURCE_FILE_NM" character varying(200),
+	"FILE_SIZE" integer,
+    "TYPE" char(1),
+    "REF_ID" character varying(14),
+    "REG_ID" character varying(10), -- 등록자ID
+	"REG_DTM" timestamp without time zone, -- 등록일시
+	CONSTRAINT "ATTACH_FILES_pkey" PRIMARY KEY ("FILE_SEQ")
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "ATTACH_FILES" OWNER TO goodseed;
+COMMENT ON TABLE "ATTACH_FILES" IS '파일업로드';
+
+
+--19. 회사정보 테이블
+-- Table: "COMPANY"
+-- DROP TABLE "COMPANY";
+
+CREATE TABLE "COMPANY" (
+    "COMP_ID" character varying(10) NOT NULL,
+    "COMP_NM" character varying(100) NOT NULL,
+    "CEO_NM" character varying(20) NOT NULL,
+    "COMP_REG_NO" character varying(11) NOT NULL,
+    "ESTABLISH_DT" character varying(10),
+    "BIZ_COND" character varying(100),
+    "BIZ_ITEM" character varying(100),
+    "ZIP_CD" character varying(5),
+    "ADDR1" character varying(50),
+    "ADDR2" character varying(50),
+    "ADDR3" character varying(50),
+    "TEL" character varying(25) NOT NULL,
+    "CMS_ORG_CD" character varying(10) NOT NULL,
+    "CMS_PAY_DIGIT" character varying(10) NOT NULL,
+    "WITHDRAW_FEE" integer,
+    "MONTHLY_LIMIT_AMT" integer,
+    "LIMIT_AMT_PER_ACCOUNT" integer, 
+    "BANK_CD" character varying(20) NOT NULL,
+    "ACCOUNT_NO" character varying(30) NOT NULL,
+    "BANKBOOK_DISP_NAME" character varying(20) NOT NULL
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "COMPANY" OWNER TO goodseed;
+COMMENT ON TABLE "COMPANY" IS '회사정보';
+
+
+
+--20. 고객정보 테이블
+-- Table: "CUSTOMER"
+-- DROP TABLE "CUSTOMER";
+
+CREATE TABLE "CUSTOMER" (
+	"CUST_NO" character varying(13) NOT NULL,
+	"CUST_NM" character varying(30) NOT NULL,
+	"CUST_BIRTH" character varying(10) NOT NULL,
+	"TEL" character varying(15) NOT NULL,
+	"HP" character varying(15) ,
+	"ETC_RELATION1" character varying(30) ,
+	"ETC_PHONE1" character varying(15) ,
+	"ETC_RELATION2" character varying(30) ,
+	"ETC_PHONE2" character varying(15) ,
+	"ETC_RELATION3" character varying(30) ,
+	"ETC_PHONE3" character varying(15) ,
+	"EMAIL" character varying(100) ,
+	"ZIP_CD" character varying(5) NOT NULL,
+	"ADDR1" character varying(50) NOT NULL,
+	"ADDR2" character varying(50) NOT NULL,
+	"ADDR3" character varying(50) NOT NULL,
+	"CUST_STATUS_CD" character varying(10) NOT NULL,
+	"MEMO" character varying(100),
+	"REG_ID" character varying(10), -- 등록자ID
+	"REG_DTM" timestamp without time zone, -- 등록일시
+	"UPD_ID" character varying(10),	--수정자ID
+	"UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "CUSTOMER" OWNER TO goodseed;
+COMMENT ON TABLE "CUSTOMER" IS '고객정보';
+
+
+
+--21. 계약정보 테이블
+-- Table: "CONTRACT"
+-- DROP TABLE "CONTRACT";
+
+CREATE TABLE "CONTRACT" (
+	"CONT_NO" character varying(14) NOT NULL, -- 계약번호
+	"CONT_NM" character varying(30) NOT NULL,
+	"CUST_NO" character varying(13) NOT NULL,
+	"CONT_DT" character varying(10) NOT NULL,
+	"TERMS_CD" character varying(100) NOT NULL,
+	"CONT_DOC_NO" character varying(14) NOT NULL,
+	"SHOP_CD" character varying(100) NOT NULL,
+	"CONT_DOC_SEND_YN" character varying(1),
+	"CONT_DOC_RECEIVE_YN" character varying(1),
+	"CONT_DOC_RECEIVE_DT" character varying(8),
+	"DELAY_REQ_START_DT" character varying(8),
+	"DELAY_REQ_END_DT" character varying(8),
+	"SHROUD_STATUS_CD" character varying(10),
+	"SHROUD_RECEIPT_DT" character varying(8),
+	"UNSINGED_TRANSFER_STATUS_CD" character varying(10),
+	"UNSINGED_TRANSFER_USE_DT" character varying(8),
+	"CONT_STATUS_CD" character varying(10),
+	"PAY_STATUS_CD" character varying(10),
+	"TERMINATION_POSSIBLE_YN" character varying(1),
+	"TERMINATION_DT" character varying(8),
+	"TERMINATION_REASON" character varying(200),
+	"PRODUCT_AMT" integer,
+	"SALE_AMT" integer,
+	"PAID_AMT" integer,
+	"MATURITY_AMT" integer,
+	"TOT_PAY_COUNT" smallint,
+	"MONTH_PAY_AMT" integer,
+	"SALE_MEMO" character varying(200),
+	"TERMINATION_REFUND_AMT" integer,
+	"CONT_FILE_SEQ" character varying(25),
+	"ORIGIN_CONT_ID" character varying(13),
+	"PAYER_NO" character varying(20) NOT NULL,
+	"BANK_CD" character varying(10),
+	"ACCOUNT_NO" character varying(30),
+	"ACCOUNT_NM" character varying(30),
+	"ACCOUNT_BIRTH", character varying(10),
+	"PAY_START_DT" character varying(10),
+	"REGULAR_PAY_DAY" integer,
+	"NEXT_TEMP_PAY_AMT" integer,
+	"CMS_FILE_SEQ" character varying(25),
+	"OVERDUE_COUNT" integer,
+	"CMS_APPROVE_STATUS_CD" character varying(10),
+	"TOT_UNPAID_AMT" integer,
+	"REG_ID" character varying(10), -- 등록자ID
+	"REG_DTM" timestamp without time zone, -- 등록일시
+	"UPD_ID" character varying(10),	--수정자ID
+	"UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "CONTRACT" OWNER TO goodseed;
+COMMENT ON TABLE "CONTRACT" IS '계약정보';
+
+
+--22. 예치금 정보 테이블
+-- Table: "DEPOSIT"
+-- DROP TABLE "DEPOSIT";
+
+CREATE TABLE "DEPOSIT" (
+	"CONT_NO" character varying(14) NOT NULL, -- 계약번호
+	"DEPOSIT_DT" character varying(10) NOT NULL, -- 예치일자
+	"DEPOSIT_AMT" integer, -- 예치금액
+	"REG_ID" character varying(10),
+	"REG_DTM" timestamp without time zone
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "DEPOSIT" OWNER TO goodseed;
+COMMENT ON TABLE "DEPOSIT" IS '예치금 정보';
+
+
+
+--23. 상담 정보 테이블
+-- Table: "CONSULT"
+-- DROP TABLE "CONSULT";
+
+CREATE TABLE "CONSULT" (
+	"CONT_NO" character varying(14) NOT NULL, -- 계약번호
+	"CONSULT_SEQ" integer, -- 상담 회차
+	"CONSULT_CONTENTS" text, -- 상담 내용
+	"REG_ID" character varying(10),
+	"REG_DTM" timestamp without time zone,
+	"UPD_ID" character varying(10),	--수정자ID
+	"UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "CONSULT" OWNER TO goodseed;
+COMMENT ON TABLE "CONSULT" IS '상담 정보';
+
+
+
+--24. CMS 파일 테이블
+-- Table: "CMS_FILE"
+-- DROP TABLE "CMS_FILE";
+
+CREATE TABLE "CMS_FILE" (
+	"CMS_FILE_NO" character varying(20) NOT NULL,
+	"PROCESS_DT" character varying(8) NOT NULL,
+	"FILE_TYPE" character varying(4) NOT NULL,
+	"FILE_NAME" character varying(20) NOT NULL,
+	"FILE_PATH" character varying(200) NOT NULL,
+	"APPLY_YN" character(1),
+	"REG_ID" character varying(10),
+	"REG_DTM" timestamp without time zone,
+	"UPD_ID" character varying(10),	--수정자ID
+	"UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "CMS_FILE" OWNER TO goodseed;
+COMMENT ON TABLE "CMS_FILE" IS 'CMS 파일';
+
+
+
+--24. CMS 파일 DATA 테이블
+-- Table: "CMS_FILE_DATA"
+-- DROP TABLE "CMS_FILE_DATA";
+
+CREATE TABLE "CMS_FILE_DATA" (
+	"CMS_FILE_NO" character varying(20) NOT NULL,
+	"SEQ" character varying(8) NOT NULL,
+	"REQ_DT" character varying(6),
+	"REQ_TYPE" character varying(1),
+	"PAYER_NO" character varying(20),
+	"BANK_CD" character varying(7),
+	"ACCOUNT_NO" character varying(16),
+	"ACCOUNT_BIRTH" character varying(16),
+	"BANK_BRANCH_CD" character varying(4),
+	"HP" character varying(12),
+	"FILE_SEQ" character varying(10),
+	"MONTH_PAY_AMT" integer, -- 월출금액
+	"UNPAID_AMT" integer, -- 미납액
+	"NEXT_TEMP_PAY_AMT" integer, -- 차기출금액
+	"PAY_REQ_AMT" integer, -- 출금요청총액
+	"RESULT_CD" character varying(1),
+	"ERROR_CD" character varying(4),
+	"PAY_TYPE" character(1),
+	"RESULT_PAID_AMT" integer, -- 납부액
+	"RESULT_UNPAID_AMT" integer, -- 미납액
+	"REG_ID" character varying(10),
+	"REG_DTM" timestamp without time zone,
+	"UPD_ID" character varying(10),	--수정자ID
+	"UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "CMS_FILE_DATA" OWNER TO goodseed;
+COMMENT ON TABLE "CMS_FILE_DATA" IS 'CMS 파일 DATA';
+COMMENT ON COLUMN "CMS_FILE_DATA"."FILE_SEQ" IS 'ATTACH_FILES';
+COMMENT ON COLUMN "CMS_FILE_DATA"."PAY_REQ_AMT" IS '출금요청총액 month_pay_amt + unpaid_amt + next_temp_pay_amt';
+COMMENT ON COLUMN "CMS_FILE_DATA"."UNPAID_AMT" IS '미납액';
+COMMENT ON COLUMN "CMS_FILE_DATA"."RESULT_PAID_AMT" IS '납부액';
+COMMENT ON COLUMN "CMS_FILE_DATA"."MONTH_PAY_AMT" IS '월출금액';
+COMMENT ON COLUMN "CMS_FILE_DATA"."NEXT_TEMP_PAY_AMT" IS '차기출금액';
+COMMENT ON COLUMN "CMS_FILE_DATA"."RESULT_UNPAID_AMT" IS '미납액';
+
+--25. 레이아웃 테이블
+-- Table: "CMS_LAYOUT"
+-- DROP TABLE "CMS_LAYOUT";
+
+CREATE TABLE "CMS_LAYOUT" (
+	"TELEGRAM_NO" character varying(4) NOT NULL,
+	"SEQ" smallint,
+	"TYPE" character(1), 
+	"NAME" character varying(50),
+	"MODE" character varying(3),
+	"LENGTH" character varying(3),
+	"PAD_DIRECTION" character varying(1),
+	"PAD_TEXT" character varying(3)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "CMS_LAYOUT" OWNER TO goodseed;
+COMMENT ON TABLE "CMS_LAYOUT" IS '레이아웃';
+
+
+
+--26. SQL예외처리 테이블
+-- Table: "SYS_STMEXCPT_HST"
+-- DROP TABLE "SYS_STMEXCPT_HST";
+
+CREATE TABLE "SYS_STMEXCPT_HST" (
+	"EXCPT_NO" character varying(10) NOT NULL,
+	"EXCPT_CNTS" text,
+	"STACK_TRC" text,
+	"OCCR_DY" character varying(8),
+	"CLNT_ADDR" character varying(20),
+	"SVR_ID"  character varying(20),
+	"CALL_URI" text,
+	"REG_ID" character varying(10),
+	"REG_DTM" timestamp without time zone,
+	"UPD_ID" character varying(10),	--수정자ID
+	"UPD_DTM" timestamp without time zone -- 수정일시
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE "SYS_STMEXCPT_HST" OWNER TO goodseed;
+COMMENT ON TABLE "SYS_STMEXCPT_HST" IS 'SQL예외처리';
+
